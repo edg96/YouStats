@@ -1,0 +1,4 @@
+# Default ignored files
+/.idea/
+/src/__pycache__/
+/src/youstats/__pycache__/
