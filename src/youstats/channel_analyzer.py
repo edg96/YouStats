@@ -71,6 +71,12 @@ class ChannelAnalyzer:
     _videos_statistic_dataframe = None
 
     def __init__(self, target: str):
+        """
+        Initialize a ChannelAnalyzer instance with a target channel name.
+
+        Args:
+            target (str): The name of the targeted YouTube channel.
+        """
         self._channel_name = target
         self.url = f'{SITE}/{target}'
         self._general_channel_info = []
@@ -83,27 +89,63 @@ class ChannelAnalyzer:
         self.wait = WebDriverWait(self.driver, 10)
 
     @property
-    def channel_name(self):
+    def channel_name(self) -> str:
+        """
+        The property for accessing the channel name.
+
+        Raises:
+            ChannelIsNone: If the channel name is None, it raises an exception.
+
+        Returns:
+            str: The name of the targeted YouTube channel.
+        """
         if self._channel_name is None:
             raise ChannelIsNone()
         return self._channel_name
 
     @property
-    def general_info_dataframe(self):
+    def general_info_dataframe(self) -> pd.DataFrame:
+        """
+        The property for accessing the general information DataFrame.
+
+        Raises:
+            DataFrameEmpty: If the DataFrame is None, it raises an exception.
+
+        Returns:
+            pd.DataFrame: The DataFrame containing general channel information.
+        """
         if self._general_info_dataframe is None:
             raise DataFrameEmpty()
         else:
             return self._general_info_dataframe
 
     @property
-    def videos_info_dataframe(self):
+    def videos_info_dataframe(self) -> pd.DataFrame:
+        """
+        The property for accessing the videos information DataFrame.
+
+        Raises:
+            DataFrameEmpty: If the DataFrame is None, it raises an exception.
+
+        Returns:
+            pd.DataFrame: The DataFrame containing details of each video on the channel.
+        """
         if self._videos_info_dataframe is None:
             raise DataFrameEmpty()
         else:
             return self._videos_info_dataframe
 
     @property
-    def videos_statistic_dataframe(self):
+    def videos_statistic_dataframe(self) -> pd.DataFrame:
+        """
+        The property for accessing the videos statistic DataFrame.
+
+        Raises:
+            DataFrameEmpty: If the DataFrame is None, it raises an exception.
+
+        Returns:
+            pd.DataFrame: The DataFrame containing statistics about the videos on the channel.
+        """
         if self._videos_statistic_dataframe is None:
             raise DataFrameEmpty()
         else:
@@ -111,24 +153,60 @@ class ChannelAnalyzer:
 
     @channel_name.setter
     def channel_name(self, channel_name):
+        """
+        The setter for the channel name property. It allows setting a new channel name.
+
+        Raises:
+            ChannelIsNone: If the provided channel name is None, it raises an exception.
+
+        Args:
+            channel_name (str): The new channel name.
+        """
         if channel_name is None:
             raise ChannelIsNone()
         self._channel_name = channel_name
 
     @general_info_dataframe.setter
     def general_info_dataframe(self, general_info_dataframe):
+        """
+        The setter for the general information DataFrame property. It allows updating the DataFrame.
+
+        Raises:
+            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
+
+        Args:
+            general_info_dataframe (pd.DataFrame): The new general information DataFrame.
+        """
         if not isinstance(general_info_dataframe, pd.DataFrame):
             raise DataFrameAssignment()
         self._general_info_dataframe = general_info_dataframe
 
     @videos_info_dataframe.setter
     def videos_info_dataframe(self, videos_info_dataframe):
+        """
+        The setter for the videos information DataFrame property. It allows updating the DataFrame.
+
+        Raises:
+            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
+
+        Args:
+            videos_info_dataframe (pd.DataFrame): The new videos information DataFrame.
+        """
         if not isinstance(videos_info_dataframe, pd.DataFrame):
             raise DataFrameAssignment()
         self._videos_info_dataframe = videos_info_dataframe
 
     @videos_statistic_dataframe.setter
     def videos_statistic_dataframe(self, videos_statistic_info):
+        """
+        The setter for the videos statistic DataFrame property. It allows updating the DataFrame.
+
+        Raises:
+            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
+
+        Args:
+            videos_statistic_info (pd.DataFrame): The new videos statistic DataFrame.
+        """
         if not isinstance(videos_statistic_info, pd.DataFrame):
             raise DataFrameAssignment()
         self._videos_statistic_dataframe = videos_statistic_info
@@ -137,10 +215,12 @@ class ChannelAnalyzer:
     def _convert_subs_or_videos(value: str) -> int:
         """
         Extract the number of subscribers or videos from a given YouTube format.
+
         Parameters:
             value (str): The number of subscribers and videos in text format.
+
         Returns:
-            int: The numbs of subcribers and videos converted.
+            int: The number of subscribers and videos converted.
         """
         value_no_point = value.replace('.', '')
         clean_value = 0
@@ -177,7 +257,7 @@ class ChannelAnalyzer:
         Converts a YouTube video date format to the USA standard date format.
 
         Parameters:
-            date (str): A date as string with the form of 'MM (Jan, Feb etc.) DD, YYYY'.
+            date (str): A date as a string with the form of 'MM (Jan, Feb, etc.) DD, YYYY'.
 
         Returns:
             str: The date formatted as 'MM/DD/YYYY'.
@@ -299,16 +379,23 @@ class ChannelAnalyzer:
         self._find_videos_info()
         self._update_dataframes()
 
-    def get_harvested_data(self):
+    def get_harvested_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Get the DataFrames containing the harvested data.
+
+        Returns:
+            tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing DataFrames
+            for general channel information, video details, and video statistics.
+        """
         return self._general_info_dataframe, self._videos_info_dataframe, self._videos_statistic_dataframe
 
     def _provide_csv_name(self) -> str:
         """
-        Provides the name of the CSV file containing information about the channel name that is
+        Provides the name of the Excel file containing information about the channel name that is
         described in the file with the date and time of creation.
 
         Returns:
-            str: The name of the CSV file.
+            str: The name of the Excel file.
         """
         return self._channel_name[1::] + '&' + datetime.now().strftime("%d_%m_%Y&%H_%M_%S") + '.xlsx'
 
@@ -330,6 +417,15 @@ class ChannelAnalyzer:
 
 
 def analyze_channel(channel_name):
+    """
+    Analyze a YouTube channel and return a ChannelAnalyzer object with harvested data.
+
+    Args:
+        channel_name (str): The name of the targeted YouTube channel.
+
+    Returns:
+        ChannelAnalyzer: A ChannelAnalyzer object with harvested data.
+    """
     ca = ChannelAnalyzer(channel_name)
     ca.harvest_data()
     ca.driver.close()
