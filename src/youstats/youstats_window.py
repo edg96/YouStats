@@ -1,4 +1,5 @@
 import os
+
 from concurrent import futures
 from pathlib import Path
 from tkinter import messagebox
@@ -9,6 +10,36 @@ from PIL import Image
 from src.youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
 from src.youstats.data_visualizer_posts import DataVisualizerPosts
 from src.youstats.data_visualizer_views import DataVisualizerViews
+
+
+"""
+This section contains the global variables responsible for various purposes involving paths required 
+by the application in order to function without visual bugs or to malfunction on certain functionalities.
+
+SYS_DESKTOP_PATH: Default saving location for CSV files (defaults to the Desktop of the OS).
+APP_ICONS_PATH: Application resources folder for icons.
+FILL_CHANNELS_ERROR_MESSAGE: Message to prompt channel name input.
+NO_DATA_ERROR_MESSAGE: Message indicating the need for channel analysis.
+ANALYSIS_BUTTON_ERROR_MESSAGE: Message for proper analysis steps.
+FURTHER_INSTRUCTIONS_MESSAGE: Instructions after channel analysis.
+
+Note:
+    Some variables paths are critical for the functionality of the application since some 
+    functionalities can be accessed only by using the buttons from the custom tkinter-GUI interface. 
+    The absence of the paths will rise errors in the custom tkinter-GUI library (mostly related to 
+    the impossibility of finding the icons paths).
+"""
+SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
+APP_ICONS_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, 'resources', 'icons')
+FILL_CHANNELS_ERROR_MESSAGE = "Please provide names for both channels."
+NO_DATA_ERROR_MESSAGE = "Please provide channels for analyzing."
+ANALYSIS_BUTTON_ERROR_MESSAGE = ("After filling the channels press this button again. \n"
+                                 "You will be able to use the functions of the application after the data is "
+                                 "collected.")
+FURTHER_INSTRUCTIONS_MESSAGE = ("After filling the channels press the top middle button to start the "
+                                "analyzing process (the one with teal colored margins). \n"
+                                "You will be able to use the functions of the application after the data is "
+                                "collected.")
 
 
 class NoChannelNameError(Exception):
@@ -50,18 +81,6 @@ def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> \
     return analyzer_objects[0], analyzer_objects[1]
 
 
-SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
-FILL_CHANNELS_ERROR_MESSAGE = "Please provide names for both channels."
-NO_DATA_ERROR_MESSAGE = "Please provide channels for analyzing."
-ANALYSIS_BUTTON_ERROR_MESSAGE = ("After filling the channels press this button again. \n"
-                                 "You will be able to use the functions of the application after the data is "
-                                 "collected.")
-FURTHER_INSTRUCTIONS_MESSAGE = ("After filling the channels press the top middle button to start the "
-                                "analyzing process (the one with teal colored margins). \n"
-                                "You will be able to use the functions of the application after the data is "
-                                "collected.")
-
-
 class YouStatsWindow(ctk.CTk):
     """
     YouStatsWindow is a custom tkinter application for analyzing and visualizing two YouTube
@@ -79,14 +98,14 @@ class YouStatsWindow(ctk.CTk):
         self.title(' YouStats')
         self.geometry('448x150')
         self.resizable(False, False)
-        self.after(250, lambda: self.iconbitmap(os.path.join(Path(__file__).resolve().parent.parent.parent,
-                                                             'resources', 'main.ico')))
+        print(APP_ICONS_PATH)
+        self.after(250, lambda: self.iconbitmap(os.path.join(APP_ICONS_PATH, 'main.ico')))
         self._pc_analyze, self._tc_analyze = None, None
 
         default_color_bg = self.cget('bg')
 
         # Entry and Label for "Your channel"
-        blueberry_image_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\blueberry.png'))
+        blueberry_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'blueberry.png')))
         pc_name_lbl = ctk.CTkLabel(self, text=' Yours:',
                                    image=blueberry_image_path, compound='left',
                                    font=('Helvetica', 14, 'bold'))
@@ -95,7 +114,7 @@ class YouStatsWindow(ctk.CTk):
         pc_name_ent.grid(row=1, column=0, padx=(10, 10))
 
         # Export buttons
-        export_image_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\exportspreedsheet.png'))
+        export_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'exportspreedsheet.png')))
         pc_export_image_btn = ctk.CTkButton(self, text='', image=export_image_path, width=5, height=5,
                                             fg_color=default_color_bg,
                                             command=lambda: self.save_pivot_data_to_csv(self._pc_analyze))
@@ -106,7 +125,7 @@ class YouStatsWindow(ctk.CTk):
         tc_export_image_btn.grid(row=1, column=3, padx=(15, 4))
 
         # Entry and Label for "Targeted channel"
-        orange_image_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\orange.png'))
+        orange_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'orange.png')))
         tc_name_lbl = ctk.CTkLabel(self, text=' Target:', image=orange_image_path,
                                    compound='left', font=('Helvetica', 14, 'bold'))
         tc_name_lbl.grid(row=0, column=4, padx=(10, 10), pady=(5, 0))
@@ -114,7 +133,7 @@ class YouStatsWindow(ctk.CTk):
         tc_name_ent.grid(row=1, column=4, padx=(10, 10))
 
         # Analyzing button
-        analyzing_image_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\analysis.png'))
+        analyzing_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'analysis.png')))
         start_analyzing_btn = ctk.CTkButton(self, text='', image=analyzing_image_path, width=25, height=25,
                                             fg_color=default_color_bg, border_width=1, border_color='#00AADC',
                                             command=lambda: self.set_analyzer_objects(pc_name_ent.get(),
@@ -123,7 +142,7 @@ class YouStatsWindow(ctk.CTk):
 
         # Common posting and views buttons
         common_posting_months_path = ctk.CTkImage(
-            Image.open(r'D:\2xProjects\Python\YouStats\resources\commonstatistics.png'))
+            Image.open(os.path.join(APP_ICONS_PATH, 'commonstatistics.png')))
         common_posting_months_btn = ctk.CTkButton(self, text='', image=common_posting_months_path,
                                                   width=5, height=5, fg_color=default_color_bg,
                                                   command=lambda: self.get_channels_common_years_posts(
@@ -168,8 +187,8 @@ class YouStatsWindow(ctk.CTk):
         tc_views_per_month_btn.grid(row=4, column=4, padx=(10, 10), pady=(10, 0))
 
         # Arrow buttons
-        right_arrow_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\rightarrow.png'))
-        left_arrow_path = ctk.CTkImage(Image.open(r'D:\2xProjects\Python\YouStats\resources\leftarrow.png'))
+        right_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'rightarrow.png')))
+        left_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'leftarrow.png')))
 
         right_arrow_btn = ctk.CTkButton(self, text='', image=right_arrow_path, width=5, height=5,
                                         fg_color=default_color_bg, hover_color=default_color_bg)
@@ -194,9 +213,6 @@ class YouStatsWindow(ctk.CTk):
         Args:
             title (str): The title of the error message.
             message (str): The error message text.
-
-        Returns:
-            None
         """
         messagebox.showerror(title, message)
 
@@ -208,9 +224,6 @@ class YouStatsWindow(ctk.CTk):
         Args:
             pivot_name (str): The name of the pivot channel.
             targeted_name (str): The name of the targeted channel.
-
-        Returns:
-            None
         """
         try:
             self._pc_analyze, self._tc_analyze = analyze_channels(pivot_name, targeted_name)
@@ -225,9 +238,6 @@ class YouStatsWindow(ctk.CTk):
 
         Args:
             pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
-
-        Returns:
-            None
         """
         try:
             pc_analyze.save_channel_details()
@@ -241,9 +251,6 @@ class YouStatsWindow(ctk.CTk):
 
         Args:
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-
-        Returns:
-            None
         """
         try:
             tc_analyze.save_channel_details()
@@ -259,9 +266,6 @@ class YouStatsWindow(ctk.CTk):
         Args:
             pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-
-        Returns:
-            None
         """
         dvp = DataVisualizerPosts(pc_analyze, tc_analyze)
         try:
@@ -279,9 +283,6 @@ class YouStatsWindow(ctk.CTk):
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
             pc_option (bool): Show posting data for the pivot channel.
             tc_option (bool): Show posting data for the targeted channel.
-
-        Returns:
-            None
         """
         dvp = DataVisualizerPosts(pc_analyze, tc_analyze)
         try:
@@ -297,9 +298,6 @@ class YouStatsWindow(ctk.CTk):
         Args:
             pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-
-        Returns:
-            None
         """
         dvv = DataVisualizerViews(pc_analyze, tc_analyze)
         try:
@@ -317,9 +315,6 @@ class YouStatsWindow(ctk.CTk):
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
             pc_option (bool): Show views data for the pivot channel.
             tc_option (bool): Show views data for the targeted channel.
-
-        Returns:
-            None
         """
         dvv = DataVisualizerViews(pc_analyze, tc_analyze)
         try:

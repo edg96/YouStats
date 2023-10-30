@@ -1,4 +1,5 @@
 # Default ignored files
 /.idea/
+/venv/
 /src/__pycache__/
 /src/youstats/__pycache__/

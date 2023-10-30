@@ -28,7 +28,6 @@ class DataVisualizerPosts(DataVisualizer):
         """
         super().__init__(pivot_channel, targeted_channel)
 
-    # Posting-related functions
     @staticmethod
     def _get_posting_dates(channel: ChannelAnalyzer) -> pd.Series:
         """
@@ -77,8 +76,9 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Plot the number of videos posted through all years of activity for a YouTube channel.
 
-        Return:
-            None
+        Parameters:
+            channel_data (dict[str, dict[str, int]]): Video data for the a YouTube channel, grouped
+            by year and month.
         """
         channel_years = list(channel_data.keys())
         for year in channel_years:
@@ -114,9 +114,6 @@ class DataVisualizerPosts(DataVisualizer):
             targeted_data (dict[str, dict[str, int]]): Video data for the targeted channel, grouped
             by year and month.
             common_years (list[str]): List of years with data available for both channels.
-
-        Return:
-            None
         """
         for year in common_years:
             months = list(MONTHS_MAPPING.values())
