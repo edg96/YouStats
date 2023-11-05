@@ -1,5 +1,5 @@
 import os
-
+import tkinter
 from concurrent import futures
 from pathlib import Path
 from tkinter import messagebox
@@ -10,7 +10,6 @@ from PIL import Image
 from src.youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
 from src.youstats.data_visualizer_posts import DataVisualizerPosts
 from src.youstats.data_visualizer_views import DataVisualizerViews
-
 
 """
 This section contains the global variables responsible for various purposes involving paths required 
@@ -31,18 +30,19 @@ Note:
 """
 SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
 APP_ICONS_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, 'resources', 'icons')
-FILL_CHANNELS_ERROR_MESSAGE = "Please provide names for both channels."
-NO_DATA_ERROR_MESSAGE = "Please provide channels for analyzing."
-ANALYSIS_BUTTON_ERROR_MESSAGE = ("After filling the channels press this button again. \n"
-                                 "You will be able to use the functions of the application after the data is "
-                                 "collected.")
-FURTHER_INSTRUCTIONS_MESSAGE = ("After filling the channels press the top middle button to start the "
-                                "analyzing process (the one with teal colored margins). \n"
-                                "You will be able to use the functions of the application after the data is "
-                                "collected.")
+FILL_CHANNELS_ERROR_MESSAGE = 'Please provide names for both channels.'
+NO_DATA_ERROR_MESSAGE = 'Please provide channels for analyzing.'
+ANALYSIS_BUTTON_ERROR_MESSAGE = ('After filling the channels press this button again. \n'
+                                 'You will be able to use the functions of the application after the data is '
+                                 'collected.')
+FURTHER_INSTRUCTIONS_MESSAGE = ('After filling the channels press the top middle button to start the '
+                                'analyzing process (the one with teal colored margins). \n'
+                                'You will be able to use the functions of the application after the data is '
+                                'collected.')
+DISABLED_OPTION_MESSAGE = 'Waiting for data'
 
 
-class NoChannelNameError(Exception):
+class MissingChannelNamesError(Exception):
     """
     Custom exception class raised when no channel name is provided for one or both channels.
 
@@ -61,7 +61,7 @@ def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> \
     """
     Analyze the provided YouTube channel names.
 
-    Args:
+    Parameters:
         pivot_channel_name (str): The name of the pivot channel.
         targeted_channel_name (str): The name of the targeted channel.
 
@@ -70,7 +70,7 @@ def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> \
         and one for the targeted channel.
     """
     if not pivot_channel_name or not targeted_channel_name:
-        raise NoChannelNameError()
+        raise MissingChannelNamesError()
 
     channel_names = [pivot_channel_name, targeted_channel_name]
 
@@ -96,229 +96,489 @@ class YouStatsWindow(ctk.CTk):
         """
         super().__init__()
         self.title(' YouStats')
-        self.geometry('448x150')
+        self.geometry('594x340')
         self.resizable(False, False)
-        print(APP_ICONS_PATH)
         self.after(250, lambda: self.iconbitmap(os.path.join(APP_ICONS_PATH, 'main.ico')))
-        self._pc_analyze, self._tc_analyze = None, None
+        self.configure(fg_color='#283649')
+        self._yc_analyze, self._tc_analyze = None, None
+        self.yc_posting_years = self.yc_views_years = DISABLED_OPTION_MESSAGE
+        self.tc_posting_years = self.tc_views_years = DISABLED_OPTION_MESSAGE
+        self.common_posting_years = self.common_views_years = DISABLED_OPTION_MESSAGE
 
         default_color_bg = self.cget('bg')
 
-        # Entry and Label for "Your channel"
-        blueberry_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'blueberry.png')))
-        pc_name_lbl = ctk.CTkLabel(self, text=' Yours:',
-                                   image=blueberry_image_path, compound='left',
-                                   font=('Helvetica', 14, 'bold'))
-        pc_name_lbl.grid(row=0, column=0, padx=(10, 10), pady=(5, 0))
-        pc_name_ent = ctk.CTkEntry(self, placeholder_text='Type here')
-        pc_name_ent.grid(row=1, column=0, padx=(10, 10))
+        def menu_option_selection(choice):
+            ctk.StringVar(value=choice)
 
-        # Export buttons
-        export_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'exportspreedsheet.png')))
-        pc_export_image_btn = ctk.CTkButton(self, text='', image=export_image_path, width=5, height=5,
-                                            fg_color=default_color_bg,
-                                            command=lambda: self.save_pivot_data_to_csv(self._pc_analyze))
-        pc_export_image_btn.grid(row=1, column=1, padx=(4, 15))
-        tc_export_image_btn = ctk.CTkButton(self, text='', image=export_image_path, width=5, height=5,
-                                            fg_color=default_color_bg,
-                                            command=lambda: self.save_targeted_data_to_csv(self._tc_analyze))
-        tc_export_image_btn.grid(row=1, column=3, padx=(15, 4))
+        # *********************
+        # Icons paths loading *
+        # *********************
+        self.orange_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'orange.png')))
+        self.blueberry_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'blueberry.png')))
+        self.analyzing_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'analysis.png')))
+        self.export_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'exportspreedsheet.png')))
+        self.common_posting_months_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'commonstatistics.png')))
+        self.all_years_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'all.png')))
+        self.right_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'rightarrow.png')))
+        self.left_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'leftarrow.png')))
 
-        # Entry and Label for "Targeted channel"
-        orange_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'orange.png')))
-        tc_name_lbl = ctk.CTkLabel(self, text=' Target:', image=orange_image_path,
-                                   compound='left', font=('Helvetica', 14, 'bold'))
-        tc_name_lbl.grid(row=0, column=4, padx=(10, 10), pady=(5, 0))
-        tc_name_ent = ctk.CTkEntry(self, placeholder_text='Type here')
-        tc_name_ent.grid(row=1, column=4, padx=(10, 10))
+        # ******************************
+        # Your channel related content *
+        # ******************************
+        # Label for channel name
+        self.yc_name_lbl = ctk.CTkLabel(self, text=' Yours:',
+                                        image=self.blueberry_image_path, compound='left',
+                                        font=('Helvetica', 14, 'bold'))
+        self.yc_name_lbl.grid(row=0, column=0, padx=(10, 10), pady=(5, 0))
 
-        # Analyzing button
-        analyzing_image_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'analysis.png')))
-        start_analyzing_btn = ctk.CTkButton(self, text='', image=analyzing_image_path, width=25, height=25,
-                                            fg_color=default_color_bg, border_width=1, border_color='#00AADC',
-                                            command=lambda: self.set_analyzer_objects(pc_name_ent.get(),
-                                                                                      tc_name_ent.get()))
-        start_analyzing_btn.grid(row=1, column=2)
+        # Entry for channel name
+        self.yc_name_ent = ctk.CTkEntry(self, placeholder_text='Type here')
+        self.yc_name_ent.grid(row=1, column=0, padx=(10, 10))
 
-        # Common posting and views buttons
-        common_posting_months_path = ctk.CTkImage(
-            Image.open(os.path.join(APP_ICONS_PATH, 'commonstatistics.png')))
-        common_posting_months_btn = ctk.CTkButton(self, text='', image=common_posting_months_path,
-                                                  width=5, height=5, fg_color=default_color_bg,
-                                                  command=lambda: self.get_channels_common_years_posts(
-                                                      self._pc_analyze, self._tc_analyze
-                                                  ))
-        common_posting_months_btn.grid(row=3, column=2, pady=(12, 0))
+        # Button for saving to excel
+        self.yc_export_data_csv_btn = ctk.CTkButton(self, text='', image=self.export_image_path, width=5, height=5,
+                                                    fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.save_data_to_csv(self._yc_analyze))
+        self.yc_export_data_csv_btn.grid(row=1, column=1, padx=(4, 15))
 
-        common_views_months_btn = ctk.CTkButton(self, text='', image=common_posting_months_path,
-                                                width=5, height=5, fg_color=default_color_bg,
-                                                command=lambda: self.get_channels_common_years_views(
-                                                    self._pc_analyze, self._tc_analyze
-                                                ))
-        common_views_months_btn.grid(row=4, column=2, pady=(12, 0))
+        # Button retrieving graph for posts (single year)
+        self.yc_posts_single_year_btn = ctk.CTkButton(self, text='Posting graphs', font=('Helvetica', 14, 'bold'),
+                                                      border_width=3, border_color='#45556d',
+                                                      fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                      text_color='#283649',
+                                                      command=lambda: self.get_single_channel_posts(
+                                                          self._yc_analyze, self._tc_analyze,
+                                                          True, False, self.yc_posts_select_year_var,
+                                                          self.yc_name_ent.get()))
+        self.yc_posts_single_year_btn.grid(row=3, column=0, padx=(10, 10), pady=(10, 0))
 
-        # Buttons with labels
-        pc_posting_rates_btn = ctk.CTkButton(self, text='Posting graphs', font=('Helvetica', 14, 'bold'),
-                                             border_width=2, border_color='#00AADC',
-                                             command=lambda: self.get_single_channel_posts(
-                                                 self._pc_analyze, self._tc_analyze,
-                                                 True, False))
-        pc_posting_rates_btn.grid(row=3, column=0, padx=(10, 10), pady=(10, 0))
+        # Button retrieving the graph for posts (all years)
+        self.yc_posts_all_years_btn = ctk.CTkButton(self, text='', image=self.all_years_path,
+                                                    width=5, height=5, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_single_channel_posts(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        True, False, self.yc_posting_years,
+                                                        self.yc_name_ent.get()
+                                                    ))
+        self.yc_posts_all_years_btn.grid(row=4, column=1, padx=(10, 10), pady=(10, 10))
 
-        pc_views_per_month_btn = ctk.CTkButton(self, text='Views graphs', font=('Helvetica', 14, 'bold'),
-                                               border_width=2, border_color='#00AADC',
-                                               command=lambda: self.get_single_channel_views(
-                                                   self._pc_analyze, self._tc_analyze,
-                                                   True, False))
-        pc_views_per_month_btn.grid(row=4, column=0, padx=(10, 10), pady=(10, 0))
+        # Button retrieving graph for views (single year)
+        self.yc_views_single_year_btn = ctk.CTkButton(self, text='Views graphs', font=('Helvetica', 14, 'bold'),
+                                                      border_width=3, border_color='#45556d',
+                                                      fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                      text_color='#283649',
+                                                      command=lambda: self.get_single_channel_views(
+                                                          self._yc_analyze, self._tc_analyze,
+                                                          True, False, self.yc_views_select_year_var,
+                                                          self.yc_name_ent.get()))
+        self.yc_views_single_year_btn.grid(row=6, column=0, padx=(10, 10), pady=(10, 0))
 
-        tc_posting_rates_btn = ctk.CTkButton(self, text='Posting graphs', font=('Helvetica', 14, 'bold'),
-                                             border_width=2, border_color='#00AADC',
-                                             command=lambda: self.get_single_channel_posts(
-                                                 self._pc_analyze, self._tc_analyze,
-                                                 False, True))
-        tc_posting_rates_btn.grid(row=3, column=4, padx=(10, 10), pady=(10, 0))
+        # Button retrieving graph for posts (all years)
+        self.yc_views_all_years_btn = ctk.CTkButton(self, text='', image=self.all_years_path,
+                                                    width=5, height=5, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_single_channel_views(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        True, False, self.yc_views_years,
+                                                        self.yc_name_ent.get()
+                                                    ))
+        self.yc_views_all_years_btn.grid(row=7, column=1, padx=(10, 10), pady=(10, 10))
 
-        tc_views_per_month_btn = ctk.CTkButton(self, text='Views graphs', font=('Helvetica', 14, 'bold'),
-                                               border_width=2, border_color='#00AADC',
-                                               command=lambda: self.get_single_channel_views(
-                                                   self._pc_analyze, self._tc_analyze,
-                                                   False, True))
-        tc_views_per_month_btn.grid(row=4, column=4, padx=(10, 10), pady=(10, 0))
+        # Dropdown menu for posting years
+        self.yc_posts_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.yc_posts_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                           fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                           text_color='#283649', text_color_disabled='#283649',
+                                                           button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                           dropdown_hover_color='#7a8ca2',
+                                                           dropdown_text_color='#283649',
+                                                           command=lambda choice:
+                                                           menu_option_selection(choice),
+                                                           variable=self.yc_posts_select_year_var)
+        self.yc_posts_select_year_menu.grid(row=4, column=0, padx=(10, 10), pady=(10, 10))
+
+        # Dropdown menu for views years
+        self.yc_views_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.yc_views_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                           fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                           text_color='#283649', text_color_disabled='#283649',
+                                                           button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                           dropdown_hover_color='#7a8ca2',
+                                                           dropdown_text_color='#283649',
+                                                           command=lambda choice:
+                                                           menu_option_selection(choice),
+                                                           variable=self.yc_views_select_year_var)
+        self.yc_views_select_year_menu.grid(row=7, column=0, padx=(10, 10), pady=(10, 10))
+
+        # **********************************
+        # Targeted channel related content *
+        # **********************************
+        # Label for channel name
+        self.tc_name_lbl = ctk.CTkLabel(self, text=' Target:', image=self.orange_image_path,
+                                        compound='left', font=('Helvetica', 14, 'bold'))
+        self.tc_name_lbl.grid(row=0, column=4, padx=(10, 10), pady=(5, 0))
+
+        # Entry for channel name
+        self.tc_name_ent = ctk.CTkEntry(self, placeholder_text='Type here')
+        self.tc_name_ent.grid(row=1, column=4, padx=(10, 10))
+
+        # Button for saving to excel
+        self.tc_export_data_csv_btn = ctk.CTkButton(self, text='', image=self.export_image_path, width=5, height=5,
+                                                    fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.save_data_to_csv(self._tc_analyze))
+        self.tc_export_data_csv_btn.grid(row=1, column=3, padx=(15, 4))
+
+        # Button retrieving graph for posts (single year)
+        self.tc_posts_single_year_btn = ctk.CTkButton(self, text='Posting graphs', font=('Helvetica', 14, 'bold'),
+                                                      border_width=3, border_color='#45556d',
+                                                      fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                      text_color='#283649',
+                                                      command=lambda: self.get_single_channel_posts(
+                                                          self._yc_analyze, self._tc_analyze,
+                                                          False, True, self.tc_posts_select_year_var,
+                                                          self.tc_name_ent.get()))
+        self.tc_posts_single_year_btn.grid(row=3, column=4, padx=(10, 10), pady=(10, 0))
+
+        # Button retrieving the graph for posts (all years)
+        self.tc_posts_all_years_btn = ctk.CTkButton(self, text='', image=self.all_years_path,
+                                                    width=5, height=5, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_single_channel_posts(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        False, True, self.tc_posting_years,
+                                                        self.tc_name_ent.get()
+                                                    ))
+        self.tc_posts_all_years_btn.grid(row=4, column=3, padx=(10, 10), pady=(10, 10))
+
+        # Button retrieving graph for views (single year)
+        self.tc_views_single_year_btn = ctk.CTkButton(self, text='Views graphs', font=('Helvetica', 14, 'bold'),
+                                                      border_width=3, border_color='#45556d',
+                                                      fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                      text_color='#283649',
+                                                      command=lambda: self.get_single_channel_views(
+                                                          self._yc_analyze, self._tc_analyze,
+                                                          False, True, self.tc_views_select_year_var,
+                                                          self.tc_name_ent.get()))
+        self.tc_views_single_year_btn.grid(row=6, column=4, padx=(10, 10), pady=(10, 0))
+
+        # Button retrieving graph for posts (all years)
+        self.tc_views_all_years_btn = ctk.CTkButton(self, text='', image=self.all_years_path,
+                                                    width=5, height=5, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_single_channel_views(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        False, True, self.tc_views_years,
+                                                        self.tc_name_ent.get()
+                                                    ))
+        self.tc_views_all_years_btn.grid(row=7, column=3, padx=(10, 10), pady=(10, 10))
+
+        # Dropdown menu for selecting posting year
+        self.tc_posts_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.tc_posts_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                           fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                           text_color='#283649', text_color_disabled='#283649',
+                                                           button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                           dropdown_hover_color='#7a8ca2',
+                                                           dropdown_text_color='#283649',
+                                                           command=lambda choice:
+                                                           menu_option_selection(choice),
+                                                           variable=self.tc_posts_select_year_var)
+        self.tc_posts_select_year_menu.grid(row=4, column=4, padx=(10, 10), pady=(10, 10))
+
+        # Dropdown menu for selecting views year
+        self.tc_views_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.tc_views_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                           fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                           text_color='#283649', text_color_disabled='#283649',
+                                                           button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                           dropdown_hover_color='#7a8ca2',
+                                                           dropdown_text_color='#283649',
+                                                           command=lambda choice:
+                                                           menu_option_selection(choice),
+                                                           variable=self.tc_views_select_year_var)
+        self.tc_views_select_year_menu.grid(row=7, column=4, padx=(10, 10), pady=(10, 10))
+
+        # *********************************
+        # Common channels related content *
+        # *********************************
+        # Posting section
+        # Button retrieving graph for posts (start operation)
+        self.common_years_posts_btn = ctk.CTkButton(self, text='', image=self.common_posting_months_path,
+                                                    width=15, height=15, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_channels_common_years_posts(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        self.common_posts_select_year_var
+                                                    ))
+        self.common_years_posts_btn.grid(row=3, column=2, pady=(12, 0))
+
+        # Button retrieving graph for posts (all years)
+        self.common_posts_all_years_btn = ctk.CTkButton(self, text='All years posts', font=('Helvetica', 14, 'bold'),
+                                                        border_width=3, border_color='#45556d',
+                                                        fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                        text_color='#283649',
+                                                        command=lambda: self.get_channels_common_years_posts(
+                                                            self._yc_analyze, self._tc_analyze,
+                                                            self.common_posting_years))
+        self.common_posts_all_years_btn.grid(row=5, column=2, padx=(10, 10), pady=(10, 10))
+
+        # Dropdown menu for selecting posting years
+        self.common_posts_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.common_posts_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                               fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                               text_color='#283649', text_color_disabled='#283649',
+                                                               button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                               dropdown_hover_color='#7a8ca2',
+                                                               dropdown_text_color='#283649',
+                                                               command=lambda choice:
+                                                               menu_option_selection(choice),
+                                                               variable=self.common_posts_select_year_var)
+        self.common_posts_select_year_menu.grid(row=4, column=2, padx=(10, 10), pady=(10, 10))
+
+        # Views section
+        # Button retrieving graph for views (start operation)
+        self.common_years_views_btn = ctk.CTkButton(self, text='', image=self.common_posting_months_path,
+                                                    width=15, height=15, fg_color=default_color_bg,
+                                                    hover_color='#657282',
+                                                    command=lambda: self.get_channels_common_years_views(
+                                                        self._yc_analyze, self._tc_analyze,
+                                                        self.common_views_select_year_var
+                                                    ))
+        self.common_years_views_btn.grid(row=6, column=2, pady=(12, 0))
+
+        # Button retrieving graph for views (all years)
+        self.common_views_all_years_btn = ctk.CTkButton(self, text='All years views', font=('Helvetica', 14, 'bold'),
+                                                        border_width=3, border_color='#45556d',
+                                                        fg_color='#87a0b5', hover_color='#7a8ca2',
+                                                        text_color='#283649',
+                                                        command=lambda: self.get_channels_common_years_views(
+                                                            self._yc_analyze, self._tc_analyze,
+                                                            self.common_views_years))
+        self.common_views_all_years_btn.grid(row=8, column=2, padx=(10, 10), pady=(10, 10))
+
+        # Dropdown menu for selecting views years
+        self.common_views_select_year_var = ctk.StringVar(value=DISABLED_OPTION_MESSAGE)
+        self.common_views_select_year_menu = ctk.CTkOptionMenu(self, state='disabled', font=('Helvetica', 14, 'bold'),
+                                                               fg_color='#87a0b5', button_hover_color='#7a8ca2',
+                                                               text_color='#283649', text_color_disabled='#283649',
+                                                               button_color='#45556d', dropdown_fg_color='#87a0b5',
+                                                               dropdown_hover_color='#7a8ca2',
+                                                               dropdown_text_color='#283649',
+                                                               command=lambda choice:
+                                                               menu_option_selection(choice),
+                                                               variable=self.common_views_select_year_var)
+        self.common_views_select_year_menu.grid(row=7, column=2, padx=(10, 10), pady=(10, 10))
+
+        # *************************
+        # General related content *
+        # *************************
+        # Analyze channels process
+        self.start_analyzing_btn = ctk.CTkButton(self, text='', image=self.analyzing_image_path, width=25, height=25,
+                                                 fg_color=default_color_bg, border_width=2, border_color='#00AADC',
+                                                 command=lambda: self.set_analyzer_objects(self.yc_name_ent.get(),
+                                                                                           self.tc_name_ent.get()))
+        self.start_analyzing_btn.grid(row=1, column=2)
 
         # Arrow buttons
-        right_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'rightarrow.png')))
-        left_arrow_path = ctk.CTkImage(Image.open(os.path.join(APP_ICONS_PATH, 'leftarrow.png')))
-
-        right_arrow_btn = ctk.CTkButton(self, text='', image=right_arrow_path, width=5, height=5,
-                                        fg_color=default_color_bg, hover_color=default_color_bg)
-        right_arrow_btn.grid(row=3, column=1, pady=(12, 0))
-        left_arrow_btn = ctk.CTkButton(self, text='', image=left_arrow_path, width=5, height=5,
-                                       fg_color=default_color_bg, hover_color=default_color_bg)
-        left_arrow_btn.grid(row=3, column=3, pady=(12, 0))
-        right_arrow_btn = ctk.CTkButton(self, text='', image=right_arrow_path, width=5, height=5,
-                                        fg_color=default_color_bg, hover_color=default_color_bg)
-        right_arrow_btn.grid(row=4, column=1, pady=(12, 0))
-        left_arrow_btn = ctk.CTkButton(self, text='', image=left_arrow_path, width=5, height=5,
-                                       fg_color=default_color_bg, hover_color=default_color_bg)
-        left_arrow_btn.grid(row=4, column=3, pady=(12, 0))
+        self.right_arrow_btn = ctk.CTkButton(self, text='', image=self.right_arrow_path, width=5, height=5,
+                                             fg_color=default_color_bg, hover_color=default_color_bg)
+        self.right_arrow_btn.grid(row=3, column=1, pady=(12, 0))
+        self.left_arrow_btn = ctk.CTkButton(self, text='', image=self.left_arrow_path, width=5, height=5,
+                                            fg_color=default_color_bg, hover_color=default_color_bg)
+        self.left_arrow_btn.grid(row=3, column=3, pady=(12, 0))
+        self.right_arrow_btn = ctk.CTkButton(self, text='', image=self.right_arrow_path, width=5, height=5,
+                                             fg_color=default_color_bg, hover_color=default_color_bg)
+        self.right_arrow_btn.grid(row=6, column=1, pady=(12, 0))
+        self.left_arrow_btn = ctk.CTkButton(self, text='', image=self.left_arrow_path, width=5, height=5,
+                                            fg_color=default_color_bg, hover_color=default_color_bg)
+        self.left_arrow_btn.grid(row=6, column=3, pady=(12, 0))
 
         self.mainloop()
 
+    # **************************
+    # Functions related to the custom tkinter-GUI interface functionalities
+    # General functions
     @staticmethod
     def show_error_message(title, message) -> None:
         """
         Show an error message as a pop-up window.
 
-        Args:
+        Parameters:
             title (str): The title of the error message.
             message (str): The error message text.
         """
         messagebox.showerror(title, message)
 
-    # Essential function
-    def set_analyzer_objects(self, pivot_name, targeted_name) -> None:
-        """
-        Set the analyzer objects for the pivot and targeted channels.
+    def update_available_years(self) -> None:
+        self.yc_posting_years = self.yc_views_years = self._yc_analyze.years_of_activity
+        self.tc_posting_years = self.tc_views_years = self._tc_analyze.years_of_activity
+        self.common_posting_years = self.common_views_years = list(
+            set(self.yc_posting_years) & set(self.tc_posting_years))
+        self.common_posting_years.sort()
+        self.common_views_years.sort()
 
-        Args:
+        first_year_in_list = self.yc_posting_years[0]
+        self.yc_posts_select_year_var.set(first_year_in_list)
+        self.yc_posts_select_year_menu.configure(state='normal', values=self.yc_posting_years)
+
+        first_year_in_list = self.tc_posting_years[0]
+        self.tc_posts_select_year_var.set(first_year_in_list)
+        self.tc_posts_select_year_menu.configure(state='normal', values=self.tc_posting_years)
+
+        first_year_in_list = self.common_posting_years[0]
+        self.common_posts_select_year_var.set(first_year_in_list)
+        self.common_posts_select_year_menu.configure(state='normal', values=self.common_posting_years)
+
+        first_year_in_list = self.yc_views_years[0]
+        self.yc_views_select_year_var.set(first_year_in_list)
+        self.yc_views_select_year_menu.configure(state='normal', values=self.yc_views_years)
+
+        first_year_in_list = self.tc_views_years[0]
+        self.tc_views_select_year_var.set(first_year_in_list)
+        self.tc_views_select_year_menu.configure(state='normal', values=self.tc_views_years)
+
+        first_year_in_list = self.common_views_years[0]
+        self.common_views_select_year_var.set(first_year_in_list)
+        self.common_views_select_year_menu.configure(state='normal', values=self.common_views_years)
+
+    # **************************
+    # Channels related functions
+    def set_analyzer_objects(self, pivot_name: str, targeted_name: str) -> None:
+        """
+        Set the analyzer objects for the pivot and targeted channels, proceeding to call the update
+        method to set the years variables and fill up the menus with the years found after the
+        analysis.
+
+        Parameters:
             pivot_name (str): The name of the pivot channel.
             targeted_name (str): The name of the targeted channel.
         """
         try:
-            self._pc_analyze, self._tc_analyze = analyze_channels(pivot_name, targeted_name)
-        except NoChannelNameError:
+            self._yc_analyze, self._tc_analyze = analyze_channels(pivot_name, targeted_name)
+        except MissingChannelNamesError as e:
+            print(e.__traceback__)
+            print(e)
             self.show_error_message(" Channels Fill Error", FILL_CHANNELS_ERROR_MESSAGE + '\n'
                                     + ANALYSIS_BUTTON_ERROR_MESSAGE)
+        self.update_available_years()
 
     # Export to CSV functions
-    def save_pivot_data_to_csv(self, pc_analyze: ChannelAnalyzer) -> None:
+    def save_data_to_csv(self, channel: ChannelAnalyzer) -> None:
         """
         Save the details of the pivot channel to a CSV file.
 
-        Args:
-            pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
+        Parameters:
+            channel (ChannelAnalyzer): The analyzer object for the pivot channel.
         """
         try:
-            pc_analyze.save_channel_details()
-        except AttributeError:
-            self.show_error_message(" Export CSV Error", NO_DATA_ERROR_MESSAGE + '\n'
-                                    + FURTHER_INSTRUCTIONS_MESSAGE)
-
-    def save_targeted_data_to_csv(self, tc_analyze: ChannelAnalyzer) -> None:
-        """
-        Save the details of the targeted channel to a CSV file.
-
-        Args:
-            tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-        """
-        try:
-            tc_analyze.save_channel_details()
-        except AttributeError:
+            channel.save_channel_details()
+        except AttributeError as e:
+            print(e.__traceback__)
+            print(e)
             self.show_error_message(" Export CSV Error", NO_DATA_ERROR_MESSAGE + '\n'
                                     + FURTHER_INSTRUCTIONS_MESSAGE)
 
     # Posting buttons related functions
-    def get_channels_common_years_posts(self, pc_analyze, tc_analyze) -> None:
-        """
-        Show common years posting data for both channels.
-
-        Args:
-            pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
-            tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-        """
-        dvp = DataVisualizerPosts(pc_analyze, tc_analyze)
-        try:
-            dvp.show_common_years_posting()
-        except AttributeError:
-            self.show_error_message(" Posting Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
-                                    + FURTHER_INSTRUCTIONS_MESSAGE)
-
-    def get_single_channel_posts(self, pc_analyze, tc_analyze, pc_option: bool, tc_option: bool) -> None:
+    def get_single_channel_posts(self, yc_analyze: ChannelAnalyzer, tc_analyze: ChannelAnalyzer,
+                                 yc_option: bool, tc_option: bool,
+                                 year_for_plotting: tkinter.StringVar | str, channel_name: str) -> None:
         """
         Show posting data for one or both channels.
 
-        Args:
-            pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
+        Parameters:
+            yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-            pc_option (bool): Show posting data for the pivot channel.
+            yc_option (bool): Show posting data for the pivot channel.
             tc_option (bool): Show posting data for the targeted channel.
+            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            channel_name (str): The name of the channel associated with the years for plotting.
         """
-        dvp = DataVisualizerPosts(pc_analyze, tc_analyze)
+        if isinstance(year_for_plotting, tkinter.StringVar):
+            selected_year = year_for_plotting.get()
+            year_for_plotting = selected_year.split(',')
+
+        dvp = DataVisualizerPosts(yc_analyze, tc_analyze)
         try:
-            dvp.show_single_channel_posting(pc_option, tc_option)
-        except AttributeError:
+            dvp.show_single_channel_posting(yc_option, tc_option, year_for_plotting, channel_name)
+        except AttributeError as e:
+            print(e.__traceback__)
+            print(e)
             self.show_error_message(" Posting Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
                                     + FURTHER_INSTRUCTIONS_MESSAGE)
 
-    def get_channels_common_years_views(self, pc_analyze, tc_analyze) -> None:
-        """
-        Show common years views data for both channels.
-
-        Args:
-            pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
-            tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-        """
-        dvv = DataVisualizerViews(pc_analyze, tc_analyze)
-        try:
-            dvv.show_common_years_views()
-        except AttributeError:
-            self.show_error_message("Views Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
-                                    + FURTHER_INSTRUCTIONS_MESSAGE)
-
-    def get_single_channel_views(self, pc_analyze, tc_analyze, pc_option: bool, tc_option: bool) -> None:
+    def get_single_channel_views(self, yc_analyze: ChannelAnalyzer, tc_analyze: ChannelAnalyzer,
+                                 yc_option: bool, tc_option: bool,
+                                 year_for_plotting: tkinter.StringVar | str,
+                                 channel_name: str) -> None:
         """
         Show views data for one or both channels.
 
-        Args:
-            pc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
+        Parameters:
+            yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-            pc_option (bool): Show views data for the pivot channel.
+            yc_option (bool): Show views data for the pivot channel.
             tc_option (bool): Show views data for the targeted channel.
+            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            channel_name (str): The name of the channel associated with the years for plotting.
         """
-        dvv = DataVisualizerViews(pc_analyze, tc_analyze)
+        if isinstance(year_for_plotting, tkinter.StringVar):
+            selected_year = year_for_plotting.get()
+            year_for_plotting = selected_year.split(',')
+
+        dvv = DataVisualizerViews(yc_analyze, tc_analyze)
         try:
-            dvv.show_single_channel_views(pc_option, tc_option)
-        except AttributeError:
-            self.show_error_message("Views Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
+            dvv.show_single_channel_views(yc_option, tc_option, year_for_plotting, channel_name)
+        except AttributeError as e:
+            print(e.__traceback__)
+            print(e)
+            self.show_error_message(" Views Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
+                                    + FURTHER_INSTRUCTIONS_MESSAGE)
+
+    def get_channels_common_years_posts(self, yc_analyze: ChannelAnalyzer, tc_analyze: ChannelAnalyzer,
+                                        year_for_plotting: tkinter.StringVar | str) -> None:
+        """
+        Show common years posting data for both channels.
+
+        Parameters:
+            yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
+            tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
+            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+        """
+        if isinstance(year_for_plotting, tkinter.StringVar):
+            selected_year = year_for_plotting.get()
+            year_for_plotting = selected_year.split(',')
+
+        dvp = DataVisualizerPosts(yc_analyze, tc_analyze)
+        try:
+            dvp.show_common_years_posting(year_for_plotting)
+        except AttributeError as e:
+            print(e.__traceback__)
+            print(e)
+            self.show_error_message(" Posting Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
+                                    + FURTHER_INSTRUCTIONS_MESSAGE)
+
+    def get_channels_common_years_views(self, yc_analyze: ChannelAnalyzer, tc_analyze: ChannelAnalyzer,
+                                        year_for_plotting: tkinter.StringVar | str) -> None:
+        """
+        Show common years views data for both channels.
+
+        Parameters:
+            yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
+            tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
+            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+        """
+        if isinstance(year_for_plotting, tkinter.StringVar):
+            selected_year = year_for_plotting.get()
+            year_for_plotting = selected_year.split(',')
+
+        dvv = DataVisualizerViews(yc_analyze, tc_analyze)
+        try:
+            dvv.show_common_years_views(year_for_plotting)
+        except AttributeError as e:
+            print(e.__traceback__)
+            print(e)
+            self.show_error_message(" Views Graphs Error", NO_DATA_ERROR_MESSAGE + '\n'
                                     + FURTHER_INSTRUCTIONS_MESSAGE)

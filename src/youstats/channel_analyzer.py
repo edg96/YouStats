@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-__all__ = ['analyze_channel']
+__all__ = ['ChannelAnalyzer', 'analyze_channel']
 
 SITE = 'https://www.youtube.com'
 SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
@@ -28,6 +28,7 @@ class ChannelIsNone(Exception):
         ChannelAnalyzer have a channel to work with, being the starting point and a mandatory
         condition for the application.
     """
+
     def __init__(self, message='Channel is None. It needs a value to serve as target.'):
         super().__init__(message)
 
@@ -37,6 +38,7 @@ class DataFrameEmpty(Exception):
     Custom exception class for a DataFrame from a ChannelAnalyzer type object, raised when the DataFrame
     is associated with a value of None, which flags the DataFrame as being not fit for use.
     """
+
     def __init__(self, message='DataFrame is None. Analyze a channel to provide data for the DataFrame.'):
         super().__init__(message)
 
@@ -47,6 +49,7 @@ class DataFrameAssignment(Exception):
     operation is attempting to associate a non DataFrame type of object to a field that is not
     expecting another type of object other than DataFrame.
     """
+
     def __init__(self, message='The provided object for assignment is not a DataFrame'):
         super().__init__(message)
 
@@ -74,7 +77,7 @@ class ChannelAnalyzer:
         """
         Initialize a ChannelAnalyzer instance with a target channel name.
 
-        Args:
+        Arguments:
             target (str): The name of the targeted YouTube channel.
         """
         self._channel_name = target
@@ -82,6 +85,8 @@ class ChannelAnalyzer:
         self._general_channel_info = []
         self._links_of_all_videos = []
         self._all_videos_details = []
+
+        self.years_of_activity = []
 
         self.chrome_options = Options()
         self.chrome_options.add_argument("--mute-audio")
@@ -262,6 +267,9 @@ class ChannelAnalyzer:
         Returns:
             str: The date formatted as 'MM/DD/YYYY'.
         """
+        if 'Premiered' in date:
+            date = date.replace('Premiered', '').strip()
+
         str_to_datetime = datetime.strptime(date, '%b %d, %Y')
         formatted_date = str_to_datetime.strftime('%m/%d/%Y')
 
@@ -291,7 +299,8 @@ class ChannelAnalyzer:
         """
         Accepts the cookies policies.
         """
-        accept_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#yDmH0d > c-wiz > div > div > div > div.nYlMgf > div.gOOQJb > div.qqtRac > div.csJmFc > form:nth-child(3) > div > div > button')))
+        accept_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,
+                                                                     '#yDmH0d > c-wiz > div > div > div > div.nYlMgf > div.gOOQJb > div.qqtRac > div.csJmFc > form:nth-child(3) > div > div > button')))
         accept_btn.click()
 
     def _get_general_info(self) -> None:
@@ -333,7 +342,8 @@ class ChannelAnalyzer:
         """
         for link in self._links_of_all_videos:
             self.driver.get(link)
-            description_box = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#expand')))
+            description_box = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#expand')))
             description_box.send_keys(Keys.RETURN)
 
             title = self.driver.find_element(By.XPATH, '//*[@id="title"]/h1/yt-formatted-string').text
@@ -357,6 +367,15 @@ class ChannelAnalyzer:
         self._videos_info_dataframe = pd.DataFrame(self._all_videos_details)
         self._videos_statistic_dataframe = self._videos_info_dataframe.describe()
 
+    def _extract_years_of_activity(self):
+        """
+        Extract the years of activity from the channel's videos DataFrame.
+        """
+        if self._videos_info_dataframe is not None:
+            # Extract unique years from the 'date' column
+            years = self._videos_info_dataframe['date'].str[-4:].unique()
+            self.years_of_activity = sorted(list(years))
+
     def harvest_data(self):
         """
         Collects data from the targeted YouTube channel.
@@ -378,6 +397,7 @@ class ChannelAnalyzer:
         self._find_all_videos_links()
         self._find_videos_info()
         self._update_dataframes()
+        self._extract_years_of_activity()
 
     def get_harvested_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """

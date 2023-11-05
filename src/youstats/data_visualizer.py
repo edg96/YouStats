@@ -1,6 +1,5 @@
 from src.youstats.channel_analyzer import ChannelAnalyzer
 
-
 MONTHS_MAPPING = {
     '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May',
     '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October',
@@ -19,11 +18,12 @@ class DataVisualizer:
     It contains methods for generating legends, extracting common years, and other data
     visualization tasks.
     """
+
     def __init__(self, pivot_channel: ChannelAnalyzer, targeted_channel: ChannelAnalyzer):
         """
         Initialize a DataVisualizer instance with pivot and targeted channels.
 
-        Args:
+        Arguments:
             pivot_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
             the pivot channel.
             targeted_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
@@ -57,23 +57,10 @@ class DataVisualizer:
         """
         Generate a legend from a data dictionary.
 
-        Args:
+        Parameters:
             data (dict[str, int]): A dictionary containing month-value pairs.
 
         Returns:
             str: A formatted legend as a string.
         """
         return '\n'.join([f'{month}: {value}' for month, value in data.items()])
-
-    @staticmethod
-    def _extract_common_years(pivot_list_of_years: list[str], targeted_list_of_years: list[str]) \
-            -> list[str]:
-        """
-        Extract the common years with videos for both channels.
-
-        Returns:
-            list[str]: A sorted list with the common years that contain videos for both channels.
-        """
-        common_years = set(pivot_list_of_years) & set(targeted_list_of_years)
-
-        return sorted(common_years)
