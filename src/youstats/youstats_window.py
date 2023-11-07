@@ -74,7 +74,6 @@ def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> \
 
     channel_names = [pivot_channel_name, targeted_channel_name]
 
-    analyzer_objects = []
     with futures.ThreadPoolExecutor(len(channel_names)) as executor:
         analyzer_objects = list(executor.map(analyze_channel, channel_names))
 
@@ -402,7 +401,7 @@ class YouStatsWindow(ctk.CTk):
     # Functions related to the custom tkinter-GUI interface functionalities
     # General functions
     @staticmethod
-    def show_error_message(title, message) -> None:
+    def show_error_message(title: str, message: str) -> None:
         """
         Show an error message as a pop-up window.
 
@@ -412,37 +411,60 @@ class YouStatsWindow(ctk.CTk):
         """
         messagebox.showerror(title, message)
 
+    @staticmethod
+    def set_dropdown_menus(years: list[str], dropdown_var: tkinter.StringVar,
+                           dropdown_menu: ctk.CTkOptionMenu) -> None:
+        """
+        Set dropdown menus with available years.
+
+        Parameters:
+            years (list[str]): List of available years.
+            dropdown_var (tkinter.StringVar): Variable for the dropdown year.
+            dropdown_menu (CTkOptionMenu): The dropdown menu.
+        """
+        first_year_in_list = years[0]
+        dropdown_var.set(first_year_in_list)
+        dropdown_menu.configure(state='normal', values=years)
+
+    @staticmethod
+    def find_common_years(yc_years: list[str], tc_years: list[str]) -> list[str]:
+        """
+        Find the common years between the pivot and targeted channels.
+
+        Parameters:
+            yc_years (list[str]): Years of activity for the pivot channel.
+            tc_years (list[str]): Years of activity for the targeted channel.
+
+        Returns:
+            list[str]: A list of common years between the two channels.
+        """
+        print(yc_years)
+        print(type(yc_years))
+        common_years = list(set(yc_years) & set(tc_years))
+        common_years.sort()
+
+        return common_years
+
     def update_available_years(self) -> None:
+        """
+        Update the available years for both channels and common years.
+        """
         self.yc_posting_years = self.yc_views_years = self._yc_analyze.years_of_activity
         self.tc_posting_years = self.tc_views_years = self._tc_analyze.years_of_activity
-        self.common_posting_years = self.common_views_years = list(
-            set(self.yc_posting_years) & set(self.tc_posting_years))
-        self.common_posting_years.sort()
-        self.common_views_years.sort()
 
-        first_year_in_list = self.yc_posting_years[0]
-        self.yc_posts_select_year_var.set(first_year_in_list)
-        self.yc_posts_select_year_menu.configure(state='normal', values=self.yc_posting_years)
+        self.common_posting_years = self.find_common_years(self.yc_posting_years, self.tc_posting_years)
+        self.common_views_years = self.find_common_years(self.yc_views_years, self.tc_views_years)
 
-        first_year_in_list = self.tc_posting_years[0]
-        self.tc_posts_select_year_var.set(first_year_in_list)
-        self.tc_posts_select_year_menu.configure(state='normal', values=self.tc_posting_years)
+        self.set_dropdown_menus(self.yc_posting_years, self.yc_posts_select_year_var, self.yc_posts_select_year_menu)
+        self.set_dropdown_menus(self.yc_views_years, self.yc_views_select_year_var, self.yc_views_select_year_menu)
 
-        first_year_in_list = self.common_posting_years[0]
-        self.common_posts_select_year_var.set(first_year_in_list)
-        self.common_posts_select_year_menu.configure(state='normal', values=self.common_posting_years)
+        self.set_dropdown_menus(self.tc_posting_years, self.tc_posts_select_year_var, self.tc_posts_select_year_menu)
+        self.set_dropdown_menus(self.tc_views_years, self.tc_views_select_year_var, self.tc_views_select_year_menu)
 
-        first_year_in_list = self.yc_views_years[0]
-        self.yc_views_select_year_var.set(first_year_in_list)
-        self.yc_views_select_year_menu.configure(state='normal', values=self.yc_views_years)
-
-        first_year_in_list = self.tc_views_years[0]
-        self.tc_views_select_year_var.set(first_year_in_list)
-        self.tc_views_select_year_menu.configure(state='normal', values=self.tc_views_years)
-
-        first_year_in_list = self.common_views_years[0]
-        self.common_views_select_year_var.set(first_year_in_list)
-        self.common_views_select_year_menu.configure(state='normal', values=self.common_views_years)
+        self.set_dropdown_menus(self.common_posting_years, self.common_posts_select_year_var,
+                                self.common_posts_select_year_menu)
+        self.set_dropdown_menus(self.common_views_years, self.common_views_select_year_var,
+                                self.common_views_select_year_menu)
 
     # **************************
     # Channels related functions
