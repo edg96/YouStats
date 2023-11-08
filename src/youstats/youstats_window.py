@@ -95,7 +95,7 @@ class YouStatsWindow(ctk.CTk):
         """
         super().__init__()
         self.title(' YouStats')
-        self.geometry('594x340')
+        self.geometry('602x340')
         self.resizable(False, False)
         self.after(250, lambda: self.iconbitmap(os.path.join(APP_ICONS_PATH, 'main.ico')))
         self.configure(fg_color='#283649')
@@ -394,8 +394,6 @@ class YouStatsWindow(ctk.CTk):
         self.left_arrow_btn = ctk.CTkButton(self, text='', image=self.left_arrow_path, width=5, height=5,
                                             fg_color=default_color_bg, hover_color=default_color_bg)
         self.left_arrow_btn.grid(row=6, column=3, pady=(12, 0))
-
-        self.mainloop()
 
     # **************************
     # Functions related to the custom tkinter-GUI interface functionalities
