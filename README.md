@@ -101,7 +101,7 @@ To check the project dependencies in detail, please read the requirements text f
 
 ## Credits
 
-Autor: Dragos-Gabriel Enache
+Author: Dragos-Gabriel Enache
 
 Maintainer: Dragos-Gabriel Enache
 
