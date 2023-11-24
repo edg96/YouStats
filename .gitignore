@@ -1,5 +1,11 @@
-# Default ignored files
-/.idea/
-/venv/
+# General
+/.venv/
 /src/__pycache__/
 /src/youstats/__pycache__/
+
+# IDE Specific folder/ files
+# For PyCharm users
+/.idea/
+
+# For Visual Studio Code users
+.vscode

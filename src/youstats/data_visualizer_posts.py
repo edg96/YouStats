@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as tck
 import pandas as pd
 
-from src.youstats.channel_analyzer import ChannelAnalyzer
-from src.youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
+from youstats.channel_analyzer import ChannelAnalyzer
+from youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
 
 
 class DataVisualizerPosts(DataVisualizer):

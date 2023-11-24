@@ -10,7 +10,7 @@ __status__ = 'Development'
 
 __all__ = []
 
-from src.youstats.youstats_window import YouStatsWindow
+from youstats.youstats_window import YouStatsWindow
 
 """
 ================== Application description ==================

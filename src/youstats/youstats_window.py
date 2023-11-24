@@ -7,9 +7,9 @@ from tkinter import messagebox
 import customtkinter as ctk
 from PIL import Image
 
-from src.youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
-from src.youstats.data_visualizer_posts import DataVisualizerPosts
-from src.youstats.data_visualizer_views import DataVisualizerViews
+from youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
+from youstats.data_visualizer_posts import DataVisualizerPosts
+from youstats.data_visualizer_views import DataVisualizerViews
 
 """
 This section contains the global variables responsible for various purposes involving paths required 

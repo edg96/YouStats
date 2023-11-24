@@ -1,4 +1,4 @@
-from src.youstats.channel_analyzer import ChannelAnalyzer
+from youstats.channel_analyzer import ChannelAnalyzer
 
 MONTHS_MAPPING = {
     '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May',
