@@ -7,26 +7,27 @@ from tkinter import messagebox
 import customtkinter as ctk
 from PIL import Image
 
-from youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
-from youstats.data_visualizer_posts import DataVisualizerPosts
-from youstats.data_visualizer_views import DataVisualizerViews
+from src.youstats.channel_analyzer import analyze_channel, ChannelAnalyzer
+from src.youstats.data_visualizer_posts import DataVisualizerPosts
+from src.youstats.data_visualizer_views import DataVisualizerViews
 
 """
-This section contains the global variables responsible for various purposes involving paths required 
-by the application in order to function without visual bugs or to malfunction on certain functionalities.
+This section contains global variables responsible for defining various paths required by the application. 
+These paths are crucial for ensuring the proper functioning of the application without visual bugs or 
+malfunctions in certain functionalities.
 
-SYS_DESKTOP_PATH: Default saving location for CSV files (defaults to the Desktop of the OS).
-APP_ICONS_PATH: Application resources folder for icons.
-FILL_CHANNELS_ERROR_MESSAGE: Message to prompt channel name input.
-NO_DATA_ERROR_MESSAGE: Message indicating the need for channel analysis.
-ANALYSIS_BUTTON_ERROR_MESSAGE: Message for proper analysis steps.
-FURTHER_INSTRUCTIONS_MESSAGE: Instructions after channel analysis.
+- `SYS_DESKTOP_PATH`: Default saving location for CSV files (defaults to the Desktop of the OS).
+- `APP_ICONS_PATH`: Path to the application's resources folder for icons.
+- `FILL_CHANNELS_ERROR_MESSAGE`: Message prompting for channel name input.
+- `NO_DATA_ERROR_MESSAGE`: Message indicating the need for channel analysis.
+- `ANALYSIS_BUTTON_ERROR_MESSAGE`: Message providing instructions for proper analysis steps.
+- `FURTHER_INSTRUCTIONS_MESSAGE`: Instructions given after channel analysis.
 
 Note:
-    Some variables paths are critical for the functionality of the application since some 
-    functionalities can be accessed only by using the buttons from the custom tkinter-GUI interface. 
-    The absence of the paths will rise errors in the custom tkinter-GUI library (mostly related to 
-    the impossibility of finding the icons paths).
+    Some variables represent critical paths for the application's functionality, especially those related to 
+    the custom tkinter-GUI interface buttons. The absence of these paths may result in errors, particularly 
+    related to the inability to locate icon paths.
+
 """
 SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
 APP_ICONS_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, 'resources', 'icons')
@@ -51,23 +52,20 @@ class MissingChannelNamesError(Exception):
     It indicates that either the pivot channel name, the targeted channel name, or both
     are missing.
     """
-
     def __init__(self):
         super().__init__('No channel name provided for one or both channels.')
 
 
-def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> \
-        tuple[ChannelAnalyzer, ChannelAnalyzer]:
+def analyze_channels(pivot_channel_name: str, targeted_channel_name: str) -> tuple[ChannelAnalyzer, ChannelAnalyzer]:
     """
     Analyze the provided YouTube channel names.
 
-    Parameters:
+    Params:
         pivot_channel_name (str): The name of the pivot channel.
         targeted_channel_name (str): The name of the targeted channel.
 
-    Returns:
-        tuple: A tuple containing two `ChannelAnalyzer` objects, one for the pivot channel
-        and one for the targeted channel.
+    Raises:
+        MissingChannelNamesError - If either the pivot channel name, targeted channel name, or both are missing.
     """
     if not pivot_channel_name or not targeted_channel_name:
         raise MissingChannelNamesError()
@@ -107,6 +105,12 @@ class YouStatsWindow(ctk.CTk):
         default_color_bg = self.cget('bg')
 
         def menu_option_selection(choice):
+            """
+            Process the selected menu option.
+
+            Params:
+                choice (str): The selected menu option.
+            """
             ctk.StringVar(value=choice)
 
         # *********************
@@ -403,7 +407,7 @@ class YouStatsWindow(ctk.CTk):
         """
         Show an error message as a pop-up window.
 
-        Parameters:
+        Params:
             title (str): The title of the error message.
             message (str): The error message text.
         """
@@ -415,7 +419,7 @@ class YouStatsWindow(ctk.CTk):
         """
         Set dropdown menus with available years.
 
-        Parameters:
+        Params:
             years (list[str]): List of available years.
             dropdown_var (tkinter.StringVar): Variable for the dropdown year.
             dropdown_menu (CTkOptionMenu): The dropdown menu.
@@ -429,12 +433,9 @@ class YouStatsWindow(ctk.CTk):
         """
         Find the common years between the pivot and targeted channels.
 
-        Parameters:
+        Params:
             yc_years (list[str]): Years of activity for the pivot channel.
             tc_years (list[str]): Years of activity for the targeted channel.
-
-        Returns:
-            list[str]: A list of common years between the two channels.
         """
         print(yc_years)
         print(type(yc_years))
@@ -468,11 +469,10 @@ class YouStatsWindow(ctk.CTk):
     # Channels related functions
     def set_analyzer_objects(self, pivot_name: str, targeted_name: str) -> None:
         """
-        Set the analyzer objects for the pivot and targeted channels, proceeding to call the update
-        method to set the years variables and fill up the menus with the years found after the
-        analysis.
+        Set the analyzer objects for the pivot and targeted channels and call the update method
+        to set the years variables and fill up the menus with the years found after the analysis.
 
-        Parameters:
+        Params:
             pivot_name (str): The name of the pivot channel.
             targeted_name (str): The name of the targeted channel.
         """
@@ -490,7 +490,7 @@ class YouStatsWindow(ctk.CTk):
         """
         Save the details of the pivot channel to a CSV file.
 
-        Parameters:
+        Params:
             channel (ChannelAnalyzer): The analyzer object for the pivot channel.
         """
         try:
@@ -508,12 +508,12 @@ class YouStatsWindow(ctk.CTk):
         """
         Show posting data for one or both channels.
 
-        Parameters:
+        Params:
             yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
             yc_option (bool): Show posting data for the pivot channel.
             tc_option (bool): Show posting data for the targeted channel.
-            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            year_for_plotting (tkinter.StringVar | str): Year(s) for plotting.
             channel_name (str): The name of the channel associated with the years for plotting.
         """
         if isinstance(year_for_plotting, tkinter.StringVar):
@@ -536,12 +536,12 @@ class YouStatsWindow(ctk.CTk):
         """
         Show views data for one or both channels.
 
-        Parameters:
+        Params:
             yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
             yc_option (bool): Show views data for the pivot channel.
             tc_option (bool): Show views data for the targeted channel.
-            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            year_for_plotting (tkinter.StringVar | str): Year(s) for plotting.
             channel_name (str): The name of the channel associated with the years for plotting.
         """
         if isinstance(year_for_plotting, tkinter.StringVar):
@@ -562,10 +562,10 @@ class YouStatsWindow(ctk.CTk):
         """
         Show common years posting data for both channels.
 
-        Parameters:
+        Params:
             yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            year_for_plotting (tkinter.StringVar | str): Year(s) for plotting.
         """
         if isinstance(year_for_plotting, tkinter.StringVar):
             selected_year = year_for_plotting.get()
@@ -585,10 +585,10 @@ class YouStatsWindow(ctk.CTk):
         """
         Show common years views data for both channels.
 
-        Parameters:
+        Params:
             yc_analyze (ChannelAnalyzer): The analyzer object for the pivot channel.
             tc_analyze (ChannelAnalyzer): The analyzer object for the targeted channel.
-            year_for_plotting (str | tkinter.StringVar): Year(s) for plotting.
+            year_for_plotting (tkinter.StringVar | str): Year(s) for plotting.
         """
         if isinstance(year_for_plotting, tkinter.StringVar):
             selected_year = year_for_plotting.get()

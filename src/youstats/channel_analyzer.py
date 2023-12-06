@@ -4,52 +4,33 @@ from datetime import datetime
 
 import pandas as pd
 from selenium import webdriver
-from selenium.webdriver import Keys
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-
-__all__ = ['ChannelAnalyzer', 'analyze_channel']
 
 SITE = 'https://www.youtube.com'
 SYS_DESKTOP_PATH = os.path.join(os.path.expanduser('~/Desktop'))
 
 
 class ChannelIsNone(Exception):
-    """
-    Custom exception class for the channel attribute from a ChannelAnalyzer type object, raised when
-    the operations of assign or getting that is associated with the channel name is None.
-
-    Notes:
-        - Important Custom Exception for assuring that a channel name is provided and the
-        ChannelAnalyzer have a channel to work with, being the starting point and a mandatory
-        condition for the application.
-    """
-
-    def __init__(self, message='Channel is None. It needs a value to serve as target.'):
+    """Custom exception for a None channel attribute."""
+    def __init__(self, message='Channel is None. It needs a value to serve as a target.'):
         super().__init__(message)
 
 
 class DataFrameEmpty(Exception):
-    """
-    Custom exception class for a DataFrame from a ChannelAnalyzer type object, raised when the DataFrame
-    is associated with a value of None, which flags the DataFrame as being not fit for use.
-    """
-
+    """Custom exception for a None DataFrame."""
     def __init__(self, message='DataFrame is None. Analyze a channel to provide data for the DataFrame.'):
         super().__init__(message)
 
 
 class DataFrameAssignment(Exception):
-    """
-    Custom exception class for a DataFrame from a ChannelAnalyzer type object, raised when the assign
-    operation is attempting to associate a non DataFrame type of object to a field that is not
-    expecting another type of object other than DataFrame.
-    """
-
+    """Custom exception for assigning a non-DataFrame object."""
     def __init__(self, message='The provided object for assignment is not a DataFrame'):
         super().__init__(message)
 
@@ -63,11 +44,11 @@ class ChannelAnalyzer:
         - information from each video: description, number of views, post day, video link
 
     Attributes:
-        _channel_name (str): The name of the targeted YouTube channel.
-        url (str): The URL of the targeted YouTube channel.
-        _general_channel_info (list[dict]): A list to store general channel information.
-        _links_of_all_videos (list[str]): A list to store links to all videos on the channel.
-        _all_videos_details (list[dict]): A list to store details of each video on the channel.
+        self._channel_name (str): The name of the targeted YouTube channel.
+        self.url (str): The URL of the targeted YouTube channel.
+        self._general_channel_info (list[dict]): A list to store general channel information.
+        self._links_of_all_videos (list[str]): A list to store links to all videos on the channel.
+        self._all_videos_details (list[dict]): A list to store details of each video on the channel.
     """
     _general_info_dataframe = None
     _videos_info_dataframe = None
@@ -77,7 +58,7 @@ class ChannelAnalyzer:
         """
         Initialize a ChannelAnalyzer instance with a target channel name.
 
-        Arguments:
+        Params:
             target (str): The name of the targeted YouTube channel.
         """
         self._channel_name = target
@@ -85,9 +66,7 @@ class ChannelAnalyzer:
         self._general_channel_info = []
         self._links_of_all_videos = []
         self._all_videos_details = []
-
         self.years_of_activity = []
-
         self.chrome_options = Options()
         self.chrome_options.add_argument("--mute-audio")
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
@@ -99,10 +78,7 @@ class ChannelAnalyzer:
         The property for accessing the channel name.
 
         Raises:
-            ChannelIsNone: If the channel name is None, it raises an exception.
-
-        Returns:
-            str: The name of the targeted YouTube channel.
+            ChannelIsNone - If the channel name is None, it raises an exception.
         """
         if self._channel_name is None:
             raise ChannelIsNone()
@@ -114,15 +90,11 @@ class ChannelAnalyzer:
         The property for accessing the general information DataFrame.
 
         Raises:
-            DataFrameEmpty: If the DataFrame is None, it raises an exception.
-
-        Returns:
-            pd.DataFrame: The DataFrame containing general channel information.
+            DataFrameEmpty - If the DataFrame is None, it raises an exception.
         """
         if self._general_info_dataframe is None:
             raise DataFrameEmpty()
-        else:
-            return self._general_info_dataframe
+        return self._general_info_dataframe
 
     @property
     def videos_info_dataframe(self) -> pd.DataFrame:
@@ -130,15 +102,11 @@ class ChannelAnalyzer:
         The property for accessing the videos information DataFrame.
 
         Raises:
-            DataFrameEmpty: If the DataFrame is None, it raises an exception.
-
-        Returns:
-            pd.DataFrame: The DataFrame containing details of each video on the channel.
+            DataFrameEmpty - If the DataFrame is None, it raises an exception.
         """
         if self._videos_info_dataframe is None:
             raise DataFrameEmpty()
-        else:
-            return self._videos_info_dataframe
+        return self._videos_info_dataframe
 
     @property
     def videos_statistic_dataframe(self) -> pd.DataFrame:
@@ -146,26 +114,22 @@ class ChannelAnalyzer:
         The property for accessing the videos statistic DataFrame.
 
         Raises:
-            DataFrameEmpty: If the DataFrame is None, it raises an exception.
-
-        Returns:
-            pd.DataFrame: The DataFrame containing statistics about the videos on the channel.
+            DataFrameEmpty - If the DataFrame is None, it raises an exception.
         """
         if self._videos_statistic_dataframe is None:
             raise DataFrameEmpty()
-        else:
-            return self._videos_statistic_dataframe
+        return self._videos_statistic_dataframe
 
     @channel_name.setter
     def channel_name(self, channel_name):
         """
         The setter for the channel name property. It allows setting a new channel name.
 
-        Raises:
-            ChannelIsNone: If the provided channel name is None, it raises an exception.
-
-        Args:
+        Params:
             channel_name (str): The new channel name.
+
+        Raises:
+            ChannelIsNone - If the provided channel name is None, it raises an exception.
         """
         if channel_name is None:
             raise ChannelIsNone()
@@ -176,11 +140,11 @@ class ChannelAnalyzer:
         """
         The setter for the general information DataFrame property. It allows updating the DataFrame.
 
-        Raises:
-            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
-
-        Args:
+        Params:
             general_info_dataframe (pd.DataFrame): The new general information DataFrame.
+
+        Raises:
+            DataFrameAssignment - If the provided object is not a DataFrame, it raises an exception.
         """
         if not isinstance(general_info_dataframe, pd.DataFrame):
             raise DataFrameAssignment()
@@ -191,11 +155,11 @@ class ChannelAnalyzer:
         """
         The setter for the videos information DataFrame property. It allows updating the DataFrame.
 
-        Raises:
-            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
-
-        Args:
+        Params:
             videos_info_dataframe (pd.DataFrame): The new videos information DataFrame.
+
+        Raises:
+            DataFrameAssignment - If the provided object is not a DataFrame, it raises an exception.
         """
         if not isinstance(videos_info_dataframe, pd.DataFrame):
             raise DataFrameAssignment()
@@ -206,11 +170,11 @@ class ChannelAnalyzer:
         """
         The setter for the videos statistic DataFrame property. It allows updating the DataFrame.
 
-        Raises:
-            DataFrameAssignment: If the provided object is not a DataFrame, it raises an exception.
-
-        Args:
+        Params:
             videos_statistic_info (pd.DataFrame): The new videos statistic DataFrame.
+
+        Raises:
+            DataFrameAssignment - If the provided object is not a DataFrame, it raises an exception.
         """
         if not isinstance(videos_statistic_info, pd.DataFrame):
             raise DataFrameAssignment()
@@ -221,23 +185,18 @@ class ChannelAnalyzer:
         """
         Extract the number of subscribers or videos from a given YouTube format.
 
-        Parameters:
+        Params:
             value (str): The number of subscribers and videos in text format.
-
-        Returns:
-            int: The number of subscribers and videos converted.
         """
         value_no_point = value.replace('.', '')
         clean_value = 0
 
-        if value_no_point.find('K') != -1:
-            clean_value = value_no_point[:value_no_point.find('K ')]
-            clean_value = int(clean_value) * 1_000
-        elif value_no_point.find('M') != -1:
-            clean_value = value_no_point[:value_no_point.find('M ')]
-            clean_value = int(clean_value) * 1_000_000
+        if 'K' in value_no_point:
+            clean_value = int(value_no_point.replace('K', '')) * 1_000
+        elif 'M' in value_no_point:
+            clean_value = int(value_no_point.replace('M', '')) * 1_000_000
         else:
-            clean_value = value[0: value.find(' ')]
+            clean_value = int(value_no_point.split()[0])
 
         return clean_value
 
@@ -246,34 +205,24 @@ class ChannelAnalyzer:
         """
         Converts a YouTube views string to a new formatted number of type int.
 
-        Parameters:
+        Params:
             views (str): A string containing the number of views from a YouTube video.
-
-        Returns:
-            int: The newly formatted views count.
         """
-        strip_text = views[0:views.find(' ')]
-
-        return int(strip_text.replace(',', ''))
+        return int(views.split()[0].replace(',', ''))
 
     @staticmethod
     def _convert_date(date: str) -> str:
         """
         Converts a YouTube video date format to the USA standard date format.
 
-        Parameters:
+        Params:
             date (str): A date as a string with the form of 'MM (Jan, Feb, etc.) DD, YYYY'.
-
-        Returns:
-            str: The date formatted as 'MM/DD/YYYY'.
         """
-        if 'Premiered' in date:
-            date = date.replace('Premiered', '').strip()
+        if 'Premiered' in date or 'Joined' in date:
+            date = date.replace('Premiered', '').replace('Joined', '').strip()
 
         str_to_datetime = datetime.strptime(date, '%b %d, %Y')
-        formatted_date = str_to_datetime.strftime('%m/%d/%Y')
-
-        return formatted_date
+        return str_to_datetime.strftime('%m/%d/%Y')
 
     def _scroll(self) -> None:
         """
@@ -307,21 +256,29 @@ class ChannelAnalyzer:
         """
         Get the header information of the channel.
         """
-        self.driver.get(f'{SITE}/{self._channel_name}/about')
+        try:
+            container = self.wait.until(EC.presence_of_element_located((By.ID, 'additional-info-container')))
+            channel_header_name = container.find_element(By.XPATH, '//*[@id="text"]').text
+            get_subscribers_num = self._convert_subs_or_videos(container.find_element(By.CSS_SELECTOR,
+                                                                                      '#additional-info-container > table > tbody > tr:nth-child(4) > td:nth-child(2)').text)
+            get_videos_num = self._convert_subs_or_videos(container.find_element(By.CSS_SELECTOR,
+                                                                                 '#additional-info-container > table > tbody > tr:nth-child(5) > td:nth-child(2)').text)
+            join_date = container.find_element(By.CSS_SELECTOR,
+                                               '#additional-info-container > table > tbody > tr:nth-child(7) > td:nth-child(2) > yt-attributed-string > span > span').text
+            total_views = container.find_element(By.CSS_SELECTOR,
+                                                 '#additional-info-container > table > tbody > tr:nth-child(6) > td:nth-child(2)').text
 
-        channel_header_name = self.driver.find_element(By.XPATH, '//*[@id="text"]').text
-        get_subcribers_num = self._convert_subs_or_videos(self.driver.find_element(By.ID, 'subscriber-count').text)
-        get_videos_num = self._convert_subs_or_videos(self.driver.find_element(By.ID, 'videos-count').text)
-        join_date = self.driver.find_element(By.XPATH, '//*[@id="right-column"]/yt-formatted-string[2]/span[2]').text
-        total_views = self.driver.find_element(By.XPATH, '//*[@id="right-column"]/yt-formatted-string[3]').text
+            self._general_channel_info.append({
+                'header_name': channel_header_name.replace(' ', ''),
+                'subscribers_num': get_subscribers_num,
+                'videos_num': get_videos_num,
+                'join_date': self._convert_date(join_date),
+                'total_views': self._format_views(total_views)
+            })
 
-        self._general_channel_info.append({
-            'header_name': channel_header_name.replace(' ', ''),
-            'subcribers_num': get_subcribers_num,
-            'videos_num': get_videos_num,
-            'join_date': self._convert_date(join_date),
-            'total_views': self._format_views(total_views)
-        })
+        except NoSuchElementException as e:
+            print('Error finding elements in the header of the YouTube channel.\n')
+            print(e)
 
     def _find_all_videos_links(self) -> None:
         """
@@ -329,11 +286,16 @@ class ChannelAnalyzer:
         """
         self.driver.get(f'{SITE}/{self._channel_name}/videos')
 
-        self._scroll()
-        videos = self.driver.find_elements(By.CLASS_NAME, 'style-scope ytd-rich-item-renderer')
-        for video in videos:
-            video_link = video.find_element(By.CSS_SELECTOR, 'a.yt-simple-endpoint').get_attribute('href')
-            self._links_of_all_videos.append(video_link)
+        try:
+            self._scroll()
+            videos = self.driver.find_elements(By.CLASS_NAME, 'style-scope ytd-rich-item-renderer')
+            for video in videos:
+                video_link = video.find_element(By.CSS_SELECTOR, 'a.yt-simple-endpoint').get_attribute('href')
+                self._links_of_all_videos.append(video_link)
+
+        except NoSuchElementException as e:
+            print('Error finding elements while retrieving video links.\n')
+            print(e)
 
     def _find_videos_info(self) -> None:
         """
@@ -342,37 +304,46 @@ class ChannelAnalyzer:
         """
         for link in self._links_of_all_videos:
             self.driver.get(link)
-            description_box = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '#expand')))
-            description_box.send_keys(Keys.RETURN)
 
-            title = self.driver.find_element(By.XPATH, '//*[@id="title"]/h1/yt-formatted-string').text
-            description = self.driver.find_element(By.ID, 'description-inline-expander').text
-            views = self.driver.find_element(By.XPATH, '//*[@id="info"]/span[1]').text
-            date = self.driver.find_element(By.XPATH, '//*[@id="info"]/span[3]').text
+            try:
+                description_box = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '#expand')))
+                description_box.send_keys(Keys.RETURN)
 
-            self._all_videos_details.append({
-                'title': title,
-                'views': self._format_views(views),
-                'date': self._convert_date(date),
-                'description': description,
-                'link': link
-            })
+                title = self.driver.find_element(By.XPATH, '//*[@id="title"]/h1/yt-formatted-string').text
+                description = self.driver.find_element(By.ID, 'description-inline-expander').text
+                views = self.driver.find_element(By.XPATH, '//*[@id="info"]/span[1]').text
+                date = self.driver.find_element(By.XPATH, '//*[@id="info"]/span[3]').text
+
+                self._all_videos_details.append({
+                    'title': title,
+                    'views': self._format_views(views),
+                    'date': self._convert_date(date),
+                    'description': description,
+                    'link': link
+                })
+
+            except NoSuchElementException as e:
+                print(f'Error finding elements for video: {link}\n')
+                print(e)
 
     def _update_dataframes(self) -> None:
         """
         Update the general information and videos details DataFrames of the channel analyzer.
         """
-        self._general_info_dataframe = pd.DataFrame(self._general_channel_info)
-        self._videos_info_dataframe = pd.DataFrame(self._all_videos_details)
-        self._videos_statistic_dataframe = self._videos_info_dataframe.describe()
+        try:
+            self._general_info_dataframe = pd.DataFrame(self._general_channel_info)
+            self._videos_info_dataframe = pd.DataFrame(self._all_videos_details)
+            self._videos_statistic_dataframe = self._videos_info_dataframe.describe()
+        except Exception as e:
+            print('Error updating DataFrames.\n')
+            print(e)
 
     def _extract_years_of_activity(self):
         """
         Extract the years of activity from the channel's videos DataFrame.
         """
         if self._videos_info_dataframe is not None:
-            # Extract unique years from the 'date' column
             years = self._videos_info_dataframe['date'].str[-4:].unique()
             self.years_of_activity = sorted(list(years))
 
@@ -391,21 +362,20 @@ class ChannelAnalyzer:
         5. Extracts details of each video, including title, description, views and post date.
         6. Updates the general information and video details DataFrames.
         """
-        self._open_url()
-        self._access_youtube()
-        self._get_general_info()
-        self._find_all_videos_links()
-        self._find_videos_info()
-        self._update_dataframes()
-        self._extract_years_of_activity()
+        try:
+            self._open_url()
+            self._access_youtube()
+            self._get_general_info()
+            self._find_all_videos_links()
+            self._find_videos_info()
+            self._update_dataframes()
+            self._extract_years_of_activity()
+        finally:
+            self.driver.close()
 
     def get_harvested_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Get the DataFrames containing the harvested data.
-
-        Returns:
-            tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing DataFrames
-            for general channel information, video details, and video statistics.
         """
         return self._general_info_dataframe, self._videos_info_dataframe, self._videos_statistic_dataframe
 
@@ -413,11 +383,8 @@ class ChannelAnalyzer:
         """
         Provides the name of the Excel file containing information about the channel name that is
         described in the file with the date and time of creation.
-
-        Returns:
-            str: The name of the Excel file.
         """
-        return self._channel_name[1::] + '&' + datetime.now().strftime("%d_%m_%Y&%H_%M_%S") + '.xlsx'
+        return f'{self._channel_name[1:]}&{datetime.now().strftime("%d_%m_%Y&%H_%M_%S")}.xlsx'
 
     def save_channel_details(self) -> None:
         """
@@ -436,17 +403,13 @@ class ChannelAnalyzer:
             self._videos_statistic_dataframe.to_excel(writer, sheet_name='statistics')
 
 
-def analyze_channel(channel_name):
+def analyze_channel(channel_name: str) -> ChannelAnalyzer:
     """
     Analyze a YouTube channel and return a ChannelAnalyzer object with harvested data.
 
-    Args:
+    Params:
         channel_name (str): The name of the targeted YouTube channel.
-
-    Returns:
-        ChannelAnalyzer: A ChannelAnalyzer object with harvested data.
     """
     ca = ChannelAnalyzer(channel_name)
     ca.harvest_data()
-    ca.driver.close()
     return ca

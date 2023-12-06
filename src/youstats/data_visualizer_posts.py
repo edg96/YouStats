@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as tck
 import pandas as pd
 
-from youstats.channel_analyzer import ChannelAnalyzer
-from youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
+from src.youstats.channel_analyzer import ChannelAnalyzer
+from src.youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
 
 
 class DataVisualizerPosts(DataVisualizer):
@@ -25,7 +25,7 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Initialize a DataVisualizerPosts instance with pivot and targeted channels.
 
-        Arguments:
+        Params:
             pivot_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing the
             pivot channel.
             targeted_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
@@ -38,12 +38,9 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Retrieve the 'date' data from the videos information DataFrame of a YouTube channel.
 
-        Parameters:
+        Params:
             channel (ChannelAnalyzer): An instance of the ChannelAnalyzer class containing the
-            YouTube channel's details.
-
-        Returns:
-            pd.Series: The posting date of the video converted to the US format date (MM/DD/YYYY).
+                YouTube channel's details.
         """
         return channel.videos_info_dataframe['date']
 
@@ -52,16 +49,9 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Retrieve the 'date' data from the videos information DataFrame of a YouTube channel.
 
-        Parameters:
+        Params:
             posting_dates (pd.Series): A Pandas Series representing the raw dates of the videos
-            from the YouTube channel (MM/DD/YYYY).
-
-        Return:
-            dict[str, dict[str, int]]: A dictionary that stores the years that contain videos
-            posted on the YouTube channel (at least one video posted through the year) as key and
-            another dictionary as the value.
-            The second dictionary contains the months of the year as the key and the number of
-            videos posted in each month as the values.
+                from the YouTube channel (MM/DD/YYYY).
         """
         yearly_data = {}
 
@@ -82,9 +72,11 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Plot the number of videos posted through all years of activity for a YouTube channel.
 
-        Parameters:
+        Params:
             channel_data (dict[str, dict[str, int]]): Video data for the YouTube channel, grouped
-            by year and month.
+                by year and month.
+            years_for_plotting (list[str]): List of years for plotting.
+            channel_name (str): Name of the channel.
         """
         channel_name = channel_name[1:]
         for year in years_for_plotting:
@@ -110,16 +102,15 @@ class DataVisualizerPosts(DataVisualizer):
 
     @staticmethod
     def _plot_posting_common_years(self, pivot_data: dict[str, dict[str, int]],
-                                   targeted_data: dict[str, dict[str, int]],
-                                   years_for_plotting: list[str]) -> None:
+                                   targeted_data: dict[str, dict[str, int]], years_for_plotting: list[str]) -> None:
         """
         Plot the number of videos posted per month for the given years of two YouTube channels.
 
-        Parameters:
+        Params:
             pivot_data (dict[str, dict[str, int]]): Video data for the pivot channel, grouped
-            by year and month.
+                by year and month.
             targeted_data (dict[str, dict[str, int]]): Video data for the targeted channel, grouped
-            by year and month.
+                by year and month.
             years_for_plotting (list[str]): List of year(s) for plotting.
         """
         for year in years_for_plotting:
@@ -152,7 +143,7 @@ class DataVisualizerPosts(DataVisualizer):
         """
         Visualize the number of videos posted per month by the pivot and targeted YouTube channels.
 
-        Parameters:
+        Params:
             common_years (list[str]): List of common years for which posting data will be visualized.
         """
         pivot_posting_dates = self._get_posting_dates(self._pivot_channel)
@@ -163,15 +154,15 @@ class DataVisualizerPosts(DataVisualizer):
 
         self._plot_posting_common_years(self, pivot_posting_per_year, targeted_posting_per_year, common_years)
 
-    def show_single_channel_posting(self, pivot_channel: bool, targeted_channel: bool, year_for_plotting,
-                                    channel_name) -> None:
+    def show_single_channel_posting(self, pivot_channel: bool, targeted_channel: bool, year_for_plotting: list[str],
+                                    channel_name: str) -> None:
         """
         Visualize the number of videos posted per month by the pivot and targeted YouTube channels.
 
-        Parameters:
+        Params:
             pivot_channel (bool): Whether to visualize posting data for the pivot channel.
             targeted_channel (bool): Whether to visualize posting data for the targeted channel.
-            year_for_plotting (str): The specific year for which posting data will be visualized.
+            year_for_plotting (list[str]): The specific year for which posting data will be visualized.
             channel_name (str): Name of the channel.
         """
         if pivot_channel:

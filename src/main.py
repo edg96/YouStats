@@ -8,8 +8,6 @@ __maintainer__ = 'Dragos-Gabriel Enache'
 __email__ = 'edragosgabriel@gmail.com'
 __status__ = 'Development'
 
-__all__ = []
-
 from youstats.youstats_window import YouStatsWindow
 
 """
@@ -26,11 +24,11 @@ YouStats is an application containing two main components:
 
 Notes:
     - ChannelAnalyzer should work only with the specified DataFrames that serve also as the sheets 
-    of a generated CSV file that will log the information for furture usage, but with the important 
+    of a generated CSV file that will log the information for future usage, but with the important 
     mention that the DataVisualizer class DO NOT need the CSV file to extract information from. 
     The CSV file is just for the user to use as it sees fit.
     - DataVisualizer must not collect data. All the required resources (the DataFrames specified 
-    before) should be already provided for the class to manipulate in a graphical form of tabels and 
+    before) should be already provided for the class to manipulate in a graphical form of tables and 
     statistics.
     - Multiple instances of ChannelAnalyzer must be used for efficiency.
 """

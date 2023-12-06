@@ -1,4 +1,4 @@
-from youstats.channel_analyzer import ChannelAnalyzer
+from src.youstats.channel_analyzer import ChannelAnalyzer
 
 MONTHS_MAPPING = {
     '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May',
@@ -23,32 +23,26 @@ class DataVisualizer:
         """
         Initialize a DataVisualizer instance with pivot and targeted channels.
 
-        Arguments:
+        Params:
             pivot_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
-            the pivot channel.
+                the pivot channel.
             targeted_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
-            the targeted channel.
+                the targeted channel.
         """
         self._pivot_channel = pivot_channel
         self._targeted_channel = targeted_channel
 
     @property
-    def pivot_channel(self):
+    def pivot_channel(self) -> ChannelAnalyzer:
         """
         Get the pivot channel's ChannelAnalyzer instance.
-
-        Returns:
-            ChannelAnalyzer: The ChannelAnalyzer instance for the pivot channel.
         """
         return self._pivot_channel
 
     @property
-    def targeted_channel(self):
+    def targeted_channel(self) -> ChannelAnalyzer:
         """
         Get the targeted channel's ChannelAnalyzer instance.
-
-        Returns:
-            ChannelAnalyzer: The ChannelAnalyzer instance for the targeted channel.
         """
         return self._targeted_channel
 
@@ -57,10 +51,7 @@ class DataVisualizer:
         """
         Generate a legend from a data dictionary.
 
-        Parameters:
+        Params:
             data (dict[str, int]): A dictionary containing month-value pairs.
-
-        Returns:
-            str: A formatted legend as a string.
         """
         return '\n'.join([f'{month}: {value}' for month, value in data.items()])

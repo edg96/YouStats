@@ -7,8 +7,8 @@ import matplotlib.ticker as tck
 import numpy as np
 import pandas as pd
 
-from youstats.channel_analyzer import ChannelAnalyzer
-from youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
+from src.youstats.channel_analyzer import ChannelAnalyzer
+from src.youstats.data_visualizer import DataVisualizer, MONTHS_MAPPING
 
 
 class DataVisualizerViews(DataVisualizer):
@@ -17,21 +17,17 @@ class DataVisualizerViews(DataVisualizer):
     views on YouTube channels.
 
     This class extends DataVisualizer to provide methods for visualizing the total views per
-    month and per year
-    for one or both YouTube channels. It works with instances of the ChannelAnalyzer class for
-    pivot and targeted
-    channels.
+    month and per year for one or both YouTube channels. It works with instances of the
+    ChannelAnalyzer class for pivot and targeted channels.
     """
 
     def __init__(self, pivot_channel: ChannelAnalyzer, targeted_channel: ChannelAnalyzer):
         """
         Initialize a DataVisualizerViews instance with pivot and targeted channels.
 
-        Arguments:
-            pivot_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing the
-            pivot channel.
-            targeted_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing
-            the targeted channel.
+        Params:
+            pivot_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing the pivot channel.
+            targeted_channel (ChannelAnalyzer): An instance of ChannelAnalyzer representing the targeted channel.
         """
         super().__init__(pivot_channel, targeted_channel)
 
@@ -40,12 +36,9 @@ class DataVisualizerViews(DataVisualizer):
         """
         Retrieve the 'views' data from the videos information DataFrame of a YouTube channel.
 
-        Parameters:
+        Params:
             channel (ChannelAnalyzer): An instance of the ChannelAnalyzer class containing the
-            YouTube channel's details.
-
-        Returns:
-            pd.Series: The views data for each video.
+                YouTube channel's details.
         """
         return channel.videos_info_dataframe['views']
 
@@ -54,12 +47,9 @@ class DataVisualizerViews(DataVisualizer):
         """
         Retrieve the 'views' data from the videos information DataFrame of a YouTube channel.
 
-        Parameters:
+        Params:
             channel (ChannelAnalyzer): An instance of the ChannelAnalyzer class containing the
-            YouTube channel's details.
-
-        Returns:
-            pd.Series: The views data for each video.
+                YouTube channel's details.
         """
         return channel.videos_info_dataframe['date']
 
@@ -68,13 +58,9 @@ class DataVisualizerViews(DataVisualizer):
         """
         Retrieve the views data from the videos information using Pandas Series.
 
-        Parameters:
+        Params:
             views_data (pd.Series): A Pandas Series representing the views data of the videos.
             posting_data (pd.Series): A Pandas Series representing the posting dates of the videos.
-
-        Returns:
-            dict: A dictionary that stores the years as keys, and for each year, it stores another
-            dictionary with months of the year as keys and the total views for each month as values.
         """
         accumulated_views = {}
 
@@ -97,9 +83,9 @@ class DataVisualizerViews(DataVisualizer):
         """
         Plot the total views per month for a YouTube channel.
 
-        Parameters:
+        Params:
             channel_data (dict[str, dict[str, int]): Views data for a channel, grouped
-            by year and month.
+                by year and month.
             years_for_plotting (list[str]): List of year(s) for plotting.
             channel_name (str): Name of the channel.
         """
@@ -126,8 +112,8 @@ class DataVisualizerViews(DataVisualizer):
         """
         Plot the total views per month for the given years of two YouTube channels.
 
-        Parameters:
-            pivot_data (dict[str, dict[str, int]): Views data for the pivot channel, grouped by year and month.
+        Params:
+            pivot_data (dict[str, dict[str, int]]): Views data for the pivot channel, grouped by year and month.
             targeted_data (dict[str, dict[str, int]): Views data for the targeted channel, grouped by year and month.
             common_years (list[str]): List of years with data available for both channels.
         """
@@ -162,7 +148,7 @@ class DataVisualizerViews(DataVisualizer):
         """
         Visualize the total views per month by the pivot and targeted YouTube channels.
 
-        Parameters:
+        Params:
             common_years (list[str]): List of common years for which views data will be visualized.
         """
         pivot_views = self._get_views(self._pivot_channel)
@@ -180,7 +166,7 @@ class DataVisualizerViews(DataVisualizer):
         """
         Visualize the total views per month by the pivot and targeted YouTube channels.
 
-        Parameters:
+        Params:
             pivot_channel (bool): Whether to visualize views data for the pivot channel.
             targeted_channel (bool): Whether to visualize views data for the targeted channel.
             years_for_plotting (list[str]): List of year(s) for which views data will be visualized.
