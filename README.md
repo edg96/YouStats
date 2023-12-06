@@ -69,7 +69,7 @@ Note: Project is made using 'Python 3.12.0'
 4. Navigate to into the project directory:
 > cd YouStats
 
-Activate the virtual environment:
+5. Activate the virtual environment:
 
    - Windows:
      > venv\Scripts\activate
