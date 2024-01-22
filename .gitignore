@@ -2,6 +2,8 @@
 /.venv/
 /src/__pycache__/
 /src/youstats/__pycache__/
+/tests/__pycache__
+/tests/youstats/__pycache__/
 
 # IDE Specific folder/ files
 # For PyCharm users

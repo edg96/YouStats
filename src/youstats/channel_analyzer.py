@@ -94,7 +94,7 @@ class ChannelAnalyzer:
         """
         if self._general_info_dataframe is None:
             raise DataFrameEmpty()
-        return self._general_info_dataframe
+        return self._general_info_dataframe.copy()
 
     @property
     def videos_info_dataframe(self) -> pd.DataFrame:
@@ -106,7 +106,7 @@ class ChannelAnalyzer:
         """
         if self._videos_info_dataframe is None:
             raise DataFrameEmpty()
-        return self._videos_info_dataframe
+        return self._videos_info_dataframe.copy()
 
     @property
     def videos_statistic_dataframe(self) -> pd.DataFrame:
@@ -118,7 +118,7 @@ class ChannelAnalyzer:
         """
         if self._videos_statistic_dataframe is None:
             raise DataFrameEmpty()
-        return self._videos_statistic_dataframe
+        return self._videos_statistic_dataframe.copy()
 
     @channel_name.setter
     def channel_name(self, channel_name):
@@ -189,16 +189,33 @@ class ChannelAnalyzer:
             value (str): The number of subscribers and videos in text format.
         """
         value_no_point = value.replace('.', '')
-        clean_value = 0
 
         if 'K' in value_no_point:
-            clean_value = int(value_no_point.replace('K', '')) * 1_000
-        elif 'M' in value_no_point:
-            clean_value = int(value_no_point.replace('M', '')) * 1_000_000
-        else:
-            clean_value = int(value_no_point.split()[0])
+            value_without_k = value_no_point.replace('K', '')
+            num_digits = len(value_without_k) - 1
 
-        return clean_value
+            threshold = 100_000
+
+            if num_digits >= 1:
+                for _ in range(num_digits):
+                    threshold /= 10
+
+            final_value = int(int(value_without_k) * threshold)
+        elif 'M' in value_no_point:
+            value_without_m = value_no_point.replace('M', '')
+            num_digits = len(value_without_m) - 1
+
+            threshold = 1_000_000
+
+            if num_digits >= 1:
+                for _ in range(num_digits):
+                    threshold /= 10
+
+            final_value = int(int(value_without_m) * threshold)
+        else:
+            final_value = int(value_no_point.split()[0])
+
+        return final_value
 
     @staticmethod
     def _format_views(views: str) -> int:
@@ -224,20 +241,6 @@ class ChannelAnalyzer:
         str_to_datetime = datetime.strptime(date, '%b %d, %Y')
         return str_to_datetime.strftime('%m/%d/%Y')
 
-    def _scroll(self) -> None:
-        """
-        Scroll to the bottom of the page.
-        """
-        height = self.driver.execute_script('return document.documentElement.scrollHeight')
-        while True:
-            html = self.driver.find_element(By.TAG_NAME, 'html')
-            html.send_keys(Keys.END)
-            time.sleep(2)
-            new_height = self.driver.execute_script('return document.documentElement.scrollHeight')
-            if height == new_height:
-                break
-            height = new_height
-
     def _open_url(self) -> None:
         """
         Access the YouTube specified channel.
@@ -251,6 +254,20 @@ class ChannelAnalyzer:
         accept_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,
                                                                      '#yDmH0d > c-wiz > div > div > div > div.nYlMgf > div.gOOQJb > div.qqtRac > div.csJmFc > form:nth-child(3) > div > div > button')))
         accept_btn.click()
+
+    def _scroll(self) -> None:
+        """
+        Scroll to the bottom of the page.
+        """
+        height = self.driver.execute_script('return document.documentElement.scrollHeight')
+        while True:
+            html = self.driver.find_element(By.TAG_NAME, 'html')
+            html.send_keys(Keys.END)
+            time.sleep(2)
+            new_height = self.driver.execute_script('return document.documentElement.scrollHeight')
+            if height == new_height:
+                break
+            height = new_height
 
     def _get_general_info(self) -> None:
         """

@@ -6,7 +6,7 @@ __license__ = 'N/A'
 __version__ = "1.0.1"
 __maintainer__ = 'Dragos-Gabriel Enache'
 __email__ = 'edragosgabriel@gmail.com'
-__status__ = 'Development'
+__status__ = 'Development temporary suspended. Unit tests are not finished.'
 
 from youstats.youstats_window import YouStatsWindow
 

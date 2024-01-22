@@ -100,4 +100,4 @@ Email: edragosgabriel@gmail.com
 
 GitHub: https://github.com/edg96
 
-Status: Development (based version is finished, improvements and new functionalities might come in the future)
+Status: Development temporary suspended. Unit tests are not finished.
